@@ -1,24 +1,45 @@
 [![Published on Vaadin Directory](https://img.shields.io/badge/Vaadin%20Directory-published-00b4f0.svg)](https://vaadin.com/directory/component/easy-grid-addon)
-[![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/easy-grid-addon.svg)](https://vaadin.com/directory/component/easy-grid-addon)
+[![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/app-layout-addon.svg)](https://vaadin.com/directory/component/easy-grid-addon)
 [![Build Status](https://jenkins.flowingcode.com/job/easy-grid-addon/badge/icon)](https://jenkins.flowingcode.com/job/easy-grid-addon)
+[![Maven Central](https://img.shields.io/maven-central/v/com.flowingcode.vaadin.addons/easy-grid-addon)](https://mvnrepository.com/artifact/com.flowingcode.vaadin.addons/easy-grid-addon)
 
 # Easy Grid Add-on
 
-This Addon provides one grid to rule them all.
+This is a template project for building new Vaadin 24 add-ons
 
 ## Features
 
-* Based on EnhancedGrid
-* Support for automatic responsiveness
-* Exporting facilities
+* List the features of your add-on in here
 
 ## Online demo
 
-[Online demo here](http://addonsv14.flowingcode.com/easy-grid)
+[Online demo here](http://addonsv24.flowingcode.com/easy-grid)
 
 ## Download release
 
 [Available in Vaadin Directory](https://vaadin.com/directory/component/easy-grid-addon)
+
+### Maven install
+
+Add the following dependencies in your pom.xml file:
+
+```xml
+<dependency>
+   <groupId>com.flowingcode.vaadin.addons</groupId>
+   <artifactId>easy-grid-addon</artifactId>
+   <version>X.Y.Z</version>
+</dependency>
+```
+<!-- the above dependency should be updated with latest released version information -->
+
+```xml
+<repository>
+   <id>vaadin-addons</id>
+   <url>https://maven.vaadin.com/vaadin-addons</url>
+</repository>
+```
+
+For SNAPSHOT versions see [here](https://maven.flowingcode.com/snapshots/).
 
 ## Building and running demo
 
@@ -37,23 +58,37 @@ The issues for this add-on are tracked on its github.com page. All bug reports a
 
 ## Contributions
 
-Contributions are welcome, but there are no guarantees that they are accepted as such. Process for contributing is the following:
+Contributions are welcome, but there are no guarantees that they are accepted as such. 
 
-- Fork this project
+As first step, please refer to our [Development Conventions](https://github.com/FlowingCode/DevelopmentConventions) page to find information about Conventional Commits & Code Style requirements.
+
+Then, follow these steps for creating a contribution:
+
+- Fork this project.
 - Create an issue to this project about the contribution (bug or feature) if there is no such issue about it already. Try to keep the scope minimal.
 - Develop and test the fix or functionality carefully. Only include minimum amount of code needed to fix the issue.
-- Refer to the fixed issue in commit
-- Send a pull request for the original project
-- Comment on the original issue that you have implemented a fix for it
+- For commit message, use [Conventional Commits](https://github.com/FlowingCode/DevelopmentConventions/blob/main/conventional-commits.md) to describe your change.
+- Send a pull request for the original project.
+- Comment on the original issue that you have implemented a fix for it.
 
 ## License & Author
 
-Add-on is distributed under Apache License 2.0. For license terms, see LICENSE.txt.
+This add-on is distributed under Apache License 2.0. For license terms, see LICENSE.txt.
 
-Easy Grid Addon is written by Flowing Code S.A.
+EASY_GRID_ADDON is written by Flowing Code S.A.
 
 # Developer Guide
 
 ## Getting started
 
 Add your code samples in this section
+
+## Special configuration when using Spring
+
+By default, Vaadin Flow only includes ```com/vaadin/flow/component``` to be always scanned for UI components and views. For this reason, the add-on might need to be whitelisted in order to display correctly. 
+
+To do so, just add ```com.flowingcode``` to the ```vaadin.whitelisted-packages``` property in ```src/main/resources/application.properties```, like:
+
+```vaadin.whitelisted-packages = com.vaadin,org.vaadin,dev.hilla,com.flowingcode```
+ 
+More information on Spring whitelisted configuration [here](https://vaadin.com/docs/latest/integrations/spring/configuration/#configure-the-scanning-of-packages).

@@ -2,7 +2,7 @@
 
 ## 1. Overview
 
-The Easy Grid Add-on is a Vaadin Flow component that automatically generates a fully functional, sortable data grid from a Java POJO definition. It uses reflection to discover bean properties, maps them to appropriately typed and formatted columns, and provides a clean Java API for controlling column visibility, ordering, rendering, row actions, and data export via the Grid Exporter Add-on.
+The Easy Grid Add-on is a Vaadin Flow component that automatically generates a fully functional, sortable data grid from a Java POJO definition. `EasyGrid<T>` extends Vaadin's `Grid<T>`, adding reflection-based column discovery, type-to-renderer mapping, a fluent column configuration API, row actions, and data export via the Grid Exporter Add-on.
 
 ## 2. Core Concepts
 
@@ -33,14 +33,6 @@ Custom type mappings can be registered globally or per-grid instance.
 
 All columns backed by `Comparable` property types are sortable by default. Multi-column sorting is supported. Sorting can be disabled per column.
 
-### 2.4 Data Binding
-
-`EasyGrid<T>` wraps Vaadin's `Grid<T>` and supports all standard data provider mechanisms:
-
-- In-memory lists (`setItems(List<T>)`)
-- Lazy data providers (`setDataProvider(DataProvider<T, ?>)`)
-- Callback data providers for backend integration
-
 ## 3. API Design
 
 ### 3.1 Construction
@@ -55,29 +47,30 @@ EasyGrid<Person> grid = new EasyGrid<>(Person.class, "firstName", "lastName", "e
 grid.setItems(personService.findAll());
 ```
 
-### 3.2 Column Configuration — Fluent API
+### 3.2 Column Configuration
+
+Standard `Grid.Column` properties (header, width, sorting, alignment, etc.) are configured directly on the column via `getColumnByKey()`. `getColumnConfig()` is used only for EasyGrid-specific configuration.
 
 ```java
 EasyGrid<Person> grid = new EasyGrid<>(Person.class);
 
-// Configure individual columns
-grid.getColumnConfig("firstName")
-    .withHeader("First Name")
-    .withSortable(true)
-    .withWidth("200px")
-    .withResizable(true);
+// Standard Grid.Column configuration
+grid.getColumnByKey("firstName")
+    .setHeader("First Name")
+    .setSortable(true)
+    .setWidth("200px")
+    .setResizable(true);
 
-grid.getColumnConfig("age")
-    .withHeader("Age")
-    .withTextAlign(ColumnTextAlign.END);
+grid.getColumnByKey("age")
+    .setHeader("Age")
+    .setTextAlign(ColumnTextAlign.END);
 
-grid.getColumnConfig("birthDate")
-    .withHeader("Date of Birth")
-    .withDateFormat("dd/MM/yyyy");
+// EasyGrid-specific configuration (type-aware formatting)
+grid.getColumnByKey("birthDate").setHeader("Date of Birth");
+grid.getColumnConfig("birthDate").withDateFormat("dd/MM/yyyy");
 
-grid.getColumnConfig("subscriber")
-    .withHeader("Subscribed")
-    .withBooleanLabels("Active", "Inactive");
+grid.getColumnByKey("subscriber").setHeader("Subscribed");
+grid.getColumnConfig("subscriber").withBooleanLabels("Active", "Inactive");
 
 // Hide columns
 grid.hideColumns("id", "createdAt", "updatedAt");
@@ -86,53 +79,28 @@ grid.hideColumns("id", "createdAt", "updatedAt");
 grid.setColumnOrder("firstName", "lastName", "email", "birthDate", "age");
 
 // Freeze columns (always visible when scrolling horizontally)
-grid.getColumnConfig("firstName").withFrozen(true);
+grid.getColumnByKey("firstName").setFrozen(true);
 ```
 
 ### 3.3 Column Configuration Wrapper — `EasyColumnConfig<T, V>`
 
-The `getColumnConfig(String propertyName)` method returns a fluent wrapper:
+`getColumnConfig(String propertyName)` returns a wrapper that exposes only EasyGrid-specific configuration — formatting, rendering conveniences, and export options. All other column properties are set directly on `Grid.Column` via `getColumn()` or `getColumnByKey()`.
 
 ```java
 public class EasyColumnConfig<T, V> {
-    // Header
-    EasyColumnConfig<T, V> withHeader(String header);
-    EasyColumnConfig<T, V> withHeader(Component headerComponent);
-
-    // Footer
-    EasyColumnConfig<T, V> withFooter(String footer);
-    EasyColumnConfig<T, V> withFooter(Component footerComponent);
-
-    // Sizing
-    EasyColumnConfig<T, V> withWidth(String width);
-    EasyColumnConfig<T, V> withFlexGrow(int flexGrow);
-    EasyColumnConfig<T, V> withAutoWidth(boolean autoWidth);
-    EasyColumnConfig<T, V> withResizable(boolean resizable);
-
-    // Sorting
-    EasyColumnConfig<T, V> withSortable(boolean sortable);
-    EasyColumnConfig<T, V> withSortProperty(String... properties);
-
-    // Alignment
-    EasyColumnConfig<T, V> withTextAlign(ColumnTextAlign align);
-
-    // Freezing
-    EasyColumnConfig<T, V> withFrozen(boolean frozen);
-    EasyColumnConfig<T, V> withFrozenToEnd(boolean frozen);
-
-    // Visibility
-    EasyColumnConfig<T, V> withVisible(boolean visible);
-
     // Custom rendering
-    EasyColumnConfig<T, V> withRenderer(Renderer<T> renderer);
     EasyColumnConfig<T, V> withComponentRenderer(SerializableFunction<T, Component> componentProvider);
     EasyColumnConfig<T, V> withValueFormatter(SerializableFunction<V, String> formatter);
 
-    // Type-specific formatting
+    // Type-specific formatting (changes the column renderer)
     EasyColumnConfig<T, V> withDateFormat(String pattern);
     EasyColumnConfig<T, V> withDateTimeFormat(String pattern);
     EasyColumnConfig<T, V> withNumberFormat(String pattern);
     EasyColumnConfig<T, V> withBooleanLabels(String trueLabel, String falseLabel);
+
+    // Export configuration (Grid Exporter integration)
+    EasyColumnConfig<T, V> withExportHeader(String header);
+    EasyColumnConfig<T, V> withExportable(boolean exportable);
 
     // Access underlying Vaadin column
     Grid.Column<T> getColumn();
@@ -167,10 +135,10 @@ grid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
 }).withVisibleWhen(person -> person.isActive());
 
 // Configure the actions column
-grid.getActionsColumnConfig()
-    .withHeader("Actions")
-    .withWidth("150px")
-    .withFrozenToEnd(true);
+grid.getActionsColumnConfig().getColumn()
+    .setHeader("Actions")
+    .setWidth("150px")
+    .setFrozenToEnd(true);
 ```
 
 ### 3.5 Row Action Wrapper — `EasyRowAction<T>`
@@ -224,7 +192,7 @@ Register custom column configurations that apply to all `EasyGrid` instances:
 ```java
 // Register a global formatter for a custom type
 EasyGrid.registerTypeConfig(Money.class, config -> {
-    config.withTextAlign(ColumnTextAlign.END);
+    config.getColumn().setTextAlign(ColumnTextAlign.END);
     config.withValueFormatter(money -> money.getCurrency() + " " + money.getAmount());
 });
 
@@ -233,59 +201,6 @@ EasyGrid.registerTypeConfig(Address.class, config -> {
     config.withValueFormatter(address ->
         address.getStreet() + ", " + address.getCity()
     );
-});
-```
-
-### 3.8 Selection
-
-```java
-// Single selection (default)
-grid.setSelectionMode(Grid.SelectionMode.SINGLE);
-grid.addSelectionListener(event -> {
-    event.getFirstSelectedItem().ifPresent(this::showDetails);
-});
-
-// Multi-selection
-grid.setSelectionMode(Grid.SelectionMode.MULTI);
-grid.addSelectionListener(event -> {
-    Set<Person> selected = event.getAllSelectedItems();
-    // bulk action
-});
-```
-
-### 3.9 Filtering
-
-`EasyGrid<T>` supports in-memory filtering for list-based data providers:
-
-```java
-// Add a header filter row (auto-generated filter fields per column)
-grid.enableHeaderFilters();
-
-// Programmatic filtering
-grid.setFilter(person ->
-    person.getAge() >= 18 && person.isActive()
-);
-
-// Combined with external filter (for use with EasyCRUD)
-grid.setExternalFilter(SerializablePredicate<T> filter);
-```
-
-### 3.10 Events
-
-```java
-// Row click
-grid.addItemClickListener(event -> {
-    showDetails(event.getItem());
-});
-
-// Row double-click
-grid.addItemDoubleClickListener(event -> {
-    editPerson(event.getItem());
-});
-
-// Sort change
-grid.addSortListener(event -> {
-    // handle sort change
 });
 ```
 
@@ -308,14 +223,14 @@ Nested properties can be referenced using dot notation:
 ```java
 grid.setColumnOrder("firstName", "lastName", "address.city", "address.postalCode");
 
-grid.getColumnConfig("address.city")
-    .withHeader("City")
-    .withSortable(true);
+grid.getColumnByKey("address.city")
+    .setHeader("City")
+    .setSortable(true);
 ```
 
 ## 6. Serialization
 
-`EasyGrid<T>` must be fully serializable for Vaadin session persistence. All internal state, column configurations, action handlers, and renderers must be serializable.
+`EasyGrid<T>` inherits Vaadin `Grid<T>`'s serialization support. All EasyGrid-specific state — column configurations, action handlers, and custom renderers — must be serializable for Vaadin session persistence.
 
 ## 7. Usage Example — Complete
 
@@ -331,10 +246,12 @@ EasyGrid<Person> grid = new EasyGrid<>(Person.class);
 // Configure columns
 grid.setColumnOrder("firstName", "lastName", "email", "birthDate", "age", "subscriber");
 grid.hideColumns("id", "createdAt", "updatedAt");
-grid.getColumnConfig("firstName").withHeader("Name").withFrozen(true);
-grid.getColumnConfig("birthDate").withHeader("Born").withDateFormat("dd/MM/yyyy");
+
+grid.getColumnByKey("firstName").setHeader("Name").setFrozen(true);
+grid.getColumnByKey("birthDate").setHeader("Born");
+grid.getColumnConfig("birthDate").withDateFormat("dd/MM/yyyy");
 grid.getColumnConfig("subscriber").withBooleanLabels("Yes", "No");
-grid.getColumnConfig("age").withTextAlign(ColumnTextAlign.END);
+grid.getColumnByKey("age").setTextAlign(ColumnTextAlign.END);
 
 // Row actions
 grid.addRowAction("Edit", VaadinIcon.EDIT, this::editPerson);

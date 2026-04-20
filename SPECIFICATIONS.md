@@ -23,7 +23,7 @@ Each Java type maps to a default column renderer and configuration:
 | `Long`, `long` | `NumberRenderer` | End | Numeric |
 | `Double`, `double`, `Float`, `float` | `NumberRenderer` | End | Numeric |
 | `BigDecimal` | `NumberRenderer` | End | Numeric |
-| `Boolean`, `boolean` | `TextRenderer` ("Yes"/"No") | Center | — |
+| `Boolean`, `boolean` | `TextRenderer` ("true"/"false") | Center | — |
 | `LocalDate` | `LocalDateRenderer` | Start | Chronological |
 | `LocalDateTime` | `LocalDateTimeRenderer` | Start | Chronological |
 | `LocalTime` | `TextRenderer` (formatted) | Start | Chronological |
@@ -53,6 +53,23 @@ Grid<Person> grid = new Grid<>();
 EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class, "firstName", "lastName", "email", "age");
 grid.setItems(personService.findAll());
 add(grid);
+
+// Manual: suppress automatic column creation; add columns explicitly
+Grid<Person> grid = new Grid<>();
+EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class, false);
+easyGrid.addColumn("firstName");
+easyGrid.addColumn("lastName");
+easyGrid.addColumn(String.class, person -> person.getAddress().getCity());
+grid.setItems(personService.findAll());
+add(grid);
+```
+
+`EasyGrid` also provides a typed overload for columns not backed by a named bean property:
+
+```java
+// Adds a typed column that participates in the configuration tree by type,
+// but has no auto-generated key or header
+EasyColumn<T, V> addColumn(Class<V> type, ValueProvider<T, ? extends V> getter);
 ```
 
 ### 3.2 Column Ordering and Visibility
@@ -67,19 +84,37 @@ easyGrid.hideColumns("id", "createdAt", "updatedAt");
 
 ### 3.3 Column Configuration — `EasyColumn<T, V>`
 
-`getColumnConfig(String propertyName)` returns a wrapper that provides type-specific formatting. For all other column properties (header, footer, width, alignment, sorting, freezing, visibility, renderer), use `getColumn()` to access the underlying `Grid.Column<T>` directly.
+`getColumn(String propertyName)` returns an `EasyColumn<T, V>` that provides both type-specific formatting and direct access to all standard `Grid.Column` setters for fluent configuration. The underlying `Grid.Column<T>` is also accessible via `EasyColumn.getColumn()` for any configuration not covered by the delegating API.
 
 ```java
 public class EasyColumn<T, V> {
 
     // Type-specific formatting (EasyGrid-managed, applied to the column renderer)
-    EasyColumn<T, V> withValueFormatter(SerializableFunction<V, String> formatter);
-    EasyColumn<T, V> withDateFormat(String pattern);
-    EasyColumn<T, V> withDateTimeFormat(String pattern);
-    EasyColumn<T, V> withNumberFormat(String pattern);
-    EasyColumn<T, V> withBooleanLabels(String trueLabel, String falseLabel);
+    EasyColumn<T, V> setFormatter(SerializableFunction<V, String> formatter);
+    EasyColumn<T, V> setDateFormat(String pattern);
+    EasyColumn<T, V> setDateTimeFormat(String pattern);
+    EasyColumn<T, V> setNumberFormat(String pattern);
+    EasyColumn<T, V> setBooleanLabels(String trueLabel, String falseLabel);
+    EasyColumn<T, V> setTextAlign(ColumnTextAlign textAlign);
 
-    // Access underlying Vaadin column for all other configuration
+    // Standard Grid.Column configuration — delegated for fluent chaining
+    EasyColumn<T, V> setHeader(String headerText);
+    EasyColumn<T, V> setHeader(Component headerComponent);
+    EasyColumn<T, V> setFooter(String footerText);
+    EasyColumn<T, V> setFooter(Component footerComponent);
+    EasyColumn<T, V> setWidth(String width);
+    EasyColumn<T, V> setFlexGrow(int flexGrow);
+    EasyColumn<T, V> setAutoWidth(boolean autoWidth);
+    EasyColumn<T, V> setResizable(boolean resizable);
+    EasyColumn<T, V> setSortable(boolean sortable);
+    EasyColumn<T, V> setSortProperty(String... properties);
+    EasyColumn<T, V> setFrozen(boolean frozen);
+    EasyColumn<T, V> setFrozenToEnd(boolean frozenToEnd);
+    EasyColumn<T, V> setVisible(boolean visible);
+    EasyColumn<T, V> setKey(String key);
+    // ... and other Grid.Column setters
+
+    // Access the underlying Vaadin column for configuration not covered above
     Grid.Column<T> getColumn();
 }
 ```
@@ -87,14 +122,14 @@ public class EasyColumn<T, V> {
 Usage example:
 
 ```java
-easyGrid.getColumnConfig("birthDate")
-    .withDateFormat("dd/MM/yyyy");
+easyGrid.getColumn("birthDate")
+    .setDateFormat("dd/MM/yyyy");
 
-easyGrid.getColumnConfig("subscriber")
-    .withBooleanLabels("Active", "Inactive");
+easyGrid.getColumn("subscriber")
+    .setBooleanLabels("Active", "Inactive");
 
-// Use getColumn() for standard Grid.Column configuration
-easyGrid.getColumnConfig("firstName").getColumn()
+// Standard Grid.Column configuration available directly on EasyColumn
+easyGrid.getColumn("firstName")
     .setHeader("First Name")
     .setFrozen(true)
     .setWidth("200px");
@@ -111,12 +146,12 @@ Register custom column configurations that apply to all `EasyGrid` instances:
 ```java
 // Register a global formatter for a custom type
 EasyGrid.registerTypeConfig(Money.class, config -> {
-    config.withValueFormatter(money -> money.getCurrency() + " " + money.getAmount());
+    config.setFormatter(money -> money.getCurrency() + " " + money.getAmount());
 });
 
 // Register a global renderer for nested types
 EasyGrid.registerTypeConfig(Address.class, config -> {
-    config.withValueFormatter(address ->
+    config.setFormatter(address ->
         address.getStreet() + ", " + address.getCity()
     );
 });
@@ -142,7 +177,7 @@ Nested properties can be referenced using dot notation:
 EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class,
     "firstName", "lastName", "address.city", "address.postalCode");
 
-easyGrid.getColumnConfig("address.city").getColumn()
+easyGrid.getColumn("address.city")
     .setHeader("City")
     .setSortable(true);
 ```
@@ -162,14 +197,14 @@ easyGrid.setColumnOrder("firstName", "lastName", "email", "birthDate", "age", "s
 easyGrid.hideColumns("id", "createdAt", "updatedAt");
 
 // Type-specific formatting
-easyGrid.getColumnConfig("birthDate").withDateFormat("dd/MM/yyyy");
-easyGrid.getColumnConfig("subscriber").withBooleanLabels("Yes", "No");
+easyGrid.getColumn("birthDate").setDateFormat("dd/MM/yyyy");
+easyGrid.getColumn("subscriber").setBooleanLabels("Yes", "No");
 
-// Standard Grid.Column configuration via getColumn()
-easyGrid.getColumnConfig("firstName").getColumn()
+// Standard Grid.Column configuration via EasyColumn directly
+easyGrid.getColumn("firstName")
     .setHeader("Name")
     .setFrozen(true);
-easyGrid.getColumnConfig("age").getColumn()
+easyGrid.getColumn("age")
     .setTextAlign(ColumnTextAlign.END);
 
 // Data binding and adding to layout — done on the Grid directly

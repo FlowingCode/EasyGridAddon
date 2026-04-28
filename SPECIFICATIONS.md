@@ -27,9 +27,13 @@ Each Java type maps to a default column renderer and configuration:
 | `LocalDate` | `LocalDateRenderer` | Start | Chronological |
 | `LocalDateTime` | `LocalDateTimeRenderer` | Start | Chronological |
 | `LocalTime` | `TextRenderer` (formatted) | Start | Chronological |
-| `Enum<?>` | `TextRenderer` (name) | Start | Alphabetical |
+| `Enum<?>` | `TextRenderer` (`toString()`) | Start | Alphabetical |
 
 Custom type mappings can be registered globally or per-grid instance.
+
+**Boolean rendering:** `Boolean` columns render as the string literals `"true"` or `"false"` by default. Any other representation ("Yes"/"No", "On"/"Off", localised strings, etc.) requires a custom formatter — typically one that delegates to an application i18n provider.
+
+**Enum rendering:** Enum columns render using `Enum.toString()`, not `Enum.name()`. Per the Java documentation for `Enum.name()`: *"Most programmers should use the toString method in preference to this one, as the toString method may return a more user-friendly name."* Enums that need human-readable labels should override `toString()` accordingly.
 
 ### 2.3 Sorting
 
@@ -139,22 +143,83 @@ easyGrid.getColumn("firstName")
 
 See [FEATURE_ROW_ACTIONS.md](FEATURE_ROW_ACTIONS.md).
 
-### 3.5 Global Type Configuration
+### 3.5 Type Configuration Tree
 
-Register custom column configurations that apply to all `EasyGrid` instances:
+Column display configuration is resolved through a three-level tree, from most to least specific:
+
+| Level | API | Scope |
+|---|---|---|
+| **Column** | `EasyColumn` setters | One specific column |
+| **Instance** | `EasyGrid.forType(Class)` | All columns of that type in one grid |
+| **Global** | `GlobalEasyGridConfiguration.forType(Class)` | All grids in the application |
+
+Within each level the class hierarchy is walked before the tree falls through to the next level (scope-first). The full resolution order for a `Foo extends Entity` column is:
+
+```
+Column·Foo
+  → Instance·Foo → Instance·Entity → Instance·Object
+    → Global·Foo → Global·Entity → Global·Object
+      → Built-in default
+```
+
+The first non-`null` value found wins. See [CONFIGURATION_RESOLUTION.md](CONFIGURATION_RESOLUTION.md) for the rationale behind scope-first ordering.
+
+**Column level** — `EasyGrid.addColumn(…)` returns an `EasyColumn` whose setters write into an isolated configuration node at the top of the chain for that column only:
 
 ```java
-// Register a global formatter for a custom type
-EasyGrid.registerTypeConfig(Money.class, config -> {
-    config.setFormatter(money -> money.getCurrency() + " " + money.getAmount());
-});
+easyGrid.addColumn("active").setNullRepresentation("—");
+easyGrid.addColumn("salary").setTextAlign(ColumnTextAlign.END);
+```
 
-// Register a global renderer for nested types
-EasyGrid.registerTypeConfig(Address.class, config -> {
-    config.setFormatter(address ->
-        address.getStreet() + ", " + address.getCity()
-    );
-});
+**Instance level** — `EasyGrid.forType(Class)` returns the instance-level `ColumnConfiguration` for a type. Changes apply to every column of that type on this grid:
+
+```java
+easyGrid.forType(BigDecimal.class)
+    .setRendererFactory(NumberRenderers.of("%,.2f", Locale.US));
+```
+
+**Global level** — `GlobalEasyGridConfiguration.forType(Class)` returns the application-wide `ColumnConfiguration`. Call `GlobalEasyGridConfiguration.freeze()` after startup to prevent further modifications:
+
+```java
+GlobalEasyGridConfiguration.forType(LocalDate.class)
+    .setRendererFactory(LocalDateRenderers.of("dd/MM/yyyy"));
+GlobalEasyGridConfiguration.freeze();
+```
+
+#### Null Representation
+
+The `nullRepresentation` property controls what is displayed when a column value is `null`. The built-in global default registers `""` (empty string) on `Object.class`, so every column starts with an empty cell for `null` values. Override it at any level:
+
+```java
+// All columns in this grid show "–" for null
+easyGrid.forType(Object.class).setNullRepresentation("–");
+
+// Only the "email" column shows "(none)" for null
+easyGrid.addColumn("email").setNullRepresentation("(none)");
+```
+
+Formatters that receive a `ColumnConfiguration` parameter can call `getNullRepresentation()` to produce consistent output.
+
+#### Type Hierarchy Support
+
+Inside each scope level, `EasyGridConfigurationClassMap` walks the Java class hierarchy. When a configuration is requested for `Foo` and none exists, it is created with `Foo`'s superclass configuration as its parent, continuing up to `Object`. Primitive types are mapped to their boxed counterparts before hierarchy walking (`int` → `Integer`, `boolean` → `Boolean`, etc.).
+
+A global `Number.class` renderer factory is therefore automatically inherited by `Integer`, `Long`, `BigDecimal`, and every other `Number` subtype unless a more specific configuration overrides it.
+
+#### Renderer Utility Classes
+
+Three `@UtilityClass` types in `com.flowingcode.vaadin.addons.easygrid.renderers` produce `RendererFactory` instances for common value types:
+
+- **`LocalDateRenderers`** — wraps `LocalDateRenderer`; overloads accept a format pattern, locale, null representation, or a `DateTimeFormatter` supplier.
+- **`LocalDateTimeRenderers`** — wraps `LocalDateTimeRenderer`; same overloads as `LocalDateRenderers`.
+- **`NumberRenderers`** — wraps `NumberRenderer`; overloads accept a `NumberFormat`, a `Locale`, or a `Formatter` pattern string with optional locale and null representation.
+
+```java
+GlobalEasyGridConfiguration.forType(LocalDate.class)
+    .setRendererFactory(LocalDateRenderers.of("dd/MM/yyyy", Locale.UK));
+
+GlobalEasyGridConfiguration.forType(Number.class)
+    .setRendererFactory(NumberRenderers.of(NumberFormat.getInstance()));
 ```
 
 ## 4. Default Header Generation

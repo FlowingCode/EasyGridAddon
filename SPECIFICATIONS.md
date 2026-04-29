@@ -94,12 +94,13 @@ easyGrid.hideColumns("id", "createdAt", "updatedAt");
 public class EasyColumn<T, V> {
 
     // Type-specific formatting (EasyGrid-managed, applied to the column renderer)
+    EasyColumn<T, V> setNullRepresentation(String nullRepresentation);
     EasyColumn<T, V> setFormatter(SerializableFunction<V, String> formatter);
-    EasyColumn<T, V> setDateFormat(String pattern);
-    EasyColumn<T, V> setDateTimeFormat(String pattern);
-    EasyColumn<T, V> setNumberFormat(String pattern);
-    EasyColumn<T, V> setBooleanLabels(String trueLabel, String falseLabel);
+    EasyColumn<T, V> setRendererFactory(RendererFactory<T, V> rendererFactory);
     EasyColumn<T, V> setTextAlign(ColumnTextAlign textAlign);
+
+    // Cast-checked type narrowing — succeeds when the column's value type is a subtype of S
+    <S> EasyColumn<T, S> as(Class<S> type);
 
     // Standard Grid.Column configuration — delegated for fluent chaining
     EasyColumn<T, V> setHeader(String headerText);
@@ -126,11 +127,15 @@ public class EasyColumn<T, V> {
 Usage example:
 
 ```java
+// Format dates using a renderer factory from the renderer utility classes
 easyGrid.getColumn("birthDate")
-    .setDateFormat("dd/MM/yyyy");
+    .as(LocalDate.class)
+    .setRendererFactory(LocalDateRenderers.of("dd/MM/yyyy"));
 
+// Format booleans with a custom formatter
 easyGrid.getColumn("subscriber")
-    .setBooleanLabels("Active", "Inactive");
+    .as(Boolean.class)
+    .setFormatter(b -> b ? "Active" : "Inactive");
 
 // Standard Grid.Column configuration available directly on EasyColumn
 easyGrid.getColumn("firstName")
@@ -262,8 +267,10 @@ easyGrid.setColumnOrder("firstName", "lastName", "email", "birthDate", "age", "s
 easyGrid.hideColumns("id", "createdAt", "updatedAt");
 
 // Type-specific formatting
-easyGrid.getColumn("birthDate").setDateFormat("dd/MM/yyyy");
-easyGrid.getColumn("subscriber").setBooleanLabels("Yes", "No");
+easyGrid.getColumn("birthDate").as(LocalDate.class)
+    .setRendererFactory(LocalDateRenderers.of("dd/MM/yyyy"));
+easyGrid.getColumn("subscriber").as(Boolean.class)
+    .setFormatter(b -> b ? "Yes" : "No");
 
 // Standard Grid.Column configuration via EasyColumn directly
 easyGrid.getColumn("firstName")

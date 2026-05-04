@@ -2,9 +2,11 @@
 
 ## 1. Overview
 
-The Easy Grid Add-on is a configuration helper that wraps an externally instantiated Vaadin `Grid<T>`. It uses reflection to discover bean properties, maps them to appropriately typed and formatted columns, and provides a clean Java API for controlling column ordering and type-specific rendering.
+The Easy Grid Add-on provides `EasyGrid<T>`, a Vaadin `Composite` component that wraps an internally created `Grid<T>`. It uses reflection to discover bean properties, maps them to appropriately typed and formatted columns, and provides a clean Java API for controlling column ordering and type-specific rendering.
 
-`EasyGrid<T>` is **not** a component — it configures an existing `Grid<T>` that was created and managed by the caller. Data binding, selection, events, and all other standard `Grid` features are accessed directly on the wrapped `Grid` instance.
+`EasyGrid<T>` is a component — it is added to the layout directly. Data binding and all other standard `Grid` features are accessed directly on the `EasyGrid` instance, which delegates them to the wrapped `Grid`. The wrapped `Grid` is accessible via `getGrid()` for any configuration not covered by the delegating API.
+
+For advanced cases where a custom `Grid` subclass must be supplied (e.g. `TreeGrid`), use `EasyGridWrapper<T, GRID>` instead — it accepts a caller-provided `GRID extends Grid<T>` and otherwise provides the same API.
 
 ## 2. Core Concepts
 
@@ -16,18 +18,18 @@ Given a POJO class `T`, `EasyGrid<T>` introspects its properties (via getter/set
 
 Each Java type maps to a default column renderer and configuration:
 
-| Java Type | Renderer | Alignment | Sorting |
-|-----------|----------|-----------|---------|
-| `String` | `TextRenderer` | Start | Alphabetical |
-| `Integer`, `int` | `NumberRenderer` | End | Numeric |
-| `Long`, `long` | `NumberRenderer` | End | Numeric |
-| `Double`, `double`, `Float`, `float` | `NumberRenderer` | End | Numeric |
-| `BigDecimal` | `NumberRenderer` | End | Numeric |
-| `Boolean`, `boolean` | `TextRenderer` ("true"/"false") | Center | — |
-| `LocalDate` | `LocalDateRenderer` | Start | Chronological |
-| `LocalDateTime` | `LocalDateTimeRenderer` | Start | Chronological |
-| `LocalTime` | `TextRenderer` (formatted) | Start | Chronological |
-| `Enum<?>` | `TextRenderer` (`toString()`) | Start | Alphabetical |
+| Java Type | Renderer | Default Format | Alignment | Sorting |
+|-----------|----------|----------------|-----------|---------|
+| `String` | `TextRenderer` | — | Start | Alphabetical |
+| `Integer`, `int` | `NumberRenderer` | — | End | Numeric |
+| `Long`, `long` | `NumberRenderer` | — | End | Numeric |
+| `Double`, `double`, `Float`, `float` | `NumberRenderer` | — | End | Numeric |
+| `BigDecimal` | `NumberRenderer` | — | End | Numeric |
+| `Boolean`, `boolean` | `TextRenderer` | "true"/"false" | Center | — |
+| `LocalDate` | `LocalDateRenderer` | `yyyy-MM-dd` | Start | Chronological |
+| `LocalDateTime` | `LocalDateTimeRenderer` | `yyyy-MM-dd HH:mm:ss` | Start | Chronological |
+| `LocalTime` | `TextRenderer` (formatted) | — | Start | Chronological |
+| `Enum<?>` | `TextRenderer` | `toString()` | Start | Alphabetical |
 
 Custom type mappings can be registered globally or per-grid instance.
 
@@ -43,29 +45,38 @@ All columns backed by `Comparable` property types are sortable by default. Multi
 
 ### 3.1 Construction
 
-`EasyGrid<T>` takes an existing `Grid<T>` instance and a bean class. The caller retains full ownership of the grid.
+`EasyGrid<T>` creates its own `Grid<T>` internally. The caller adds the `EasyGrid` instance to the layout and calls `setItems()` on it.
 
 ```java
 // Basic: all discovered properties become columns
-Grid<Person> grid = new Grid<>();
-EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class);
-grid.setItems(personService.findAll());
-add(grid);
+EasyGrid<Person> easyGrid = new EasyGrid<>(Person.class);
+easyGrid.setItems(personService.findAll());
+add(easyGrid);
 
 // Selective: only specified properties become columns, in order
-Grid<Person> grid = new Grid<>();
-EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class, "firstName", "lastName", "email", "age");
-grid.setItems(personService.findAll());
-add(grid);
+EasyGrid<Person> easyGrid = new EasyGrid<>(Person.class, "firstName", "lastName", "email", "age");
+easyGrid.setItems(personService.findAll());
+add(easyGrid);
 
 // Manual: suppress automatic column creation; add columns explicitly
-Grid<Person> grid = new Grid<>();
-EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class, false);
+EasyGrid<Person> easyGrid = new EasyGrid<>(Person.class, false);
 easyGrid.addColumn("firstName");
 easyGrid.addColumn("lastName");
 easyGrid.addColumn(String.class, person -> person.getAddress().getCity());
-grid.setItems(personService.findAll());
-add(grid);
+easyGrid.setItems(personService.findAll());
+add(easyGrid);
+```
+
+For cases where a custom `Grid` subclass must be supplied, use `EasyGridWrapper`:
+
+```java
+TreeGrid<Person> treeGrid = new TreeGrid<>();
+EasyGridWrapper<Person, TreeGrid<Person>> wrapper =
+    new EasyGridWrapper<>(treeGrid, Person.class, "firstName", "lastName");
+wrapper.setItems(personService.findAll());
+add(wrapper);
+// access the wrapped grid for TreeGrid-specific configuration
+wrapper.getGrid().setItemHierarchyData(...);
 ```
 
 `EasyGrid` also provides a typed overload for columns not backed by a named bean property:
@@ -101,6 +112,9 @@ public class EasyColumn<T, V> {
 
     // Cast-checked type narrowing — succeeds when the column's value type is a subtype of S
     <S> EasyColumn<T, S> as(Class<S> type);
+
+    // The column value type
+    Class<V> getType();
 
     // Standard Grid.Column configuration — delegated for fluent chaining
     EasyColumn<T, V> setHeader(String headerText);
@@ -207,7 +221,7 @@ Formatters that receive a `ColumnConfiguration` parameter can call `getNullRepre
 
 #### Type Hierarchy Support
 
-Inside each scope level, `EasyGridConfigurationClassMap` walks the Java class hierarchy. When a configuration is requested for `Foo` and none exists, it is created with `Foo`'s superclass configuration as its parent, continuing up to `Object`. Primitive types are mapped to their boxed counterparts before hierarchy walking (`int` → `Integer`, `boolean` → `Boolean`, etc.).
+Inside each scope level, configuration walks the Java class hierarchy. When a configuration is requested for `Foo` and none exists, it is created with `Foo`'s superclass configuration as its parent, continuing up to `Object`. Primitive types are mapped to their boxed counterparts before hierarchy walking (`int` → `Integer`, `boolean` → `Boolean`, etc.).
 
 A global `Number.class` renderer factory is therefore automatically inherited by `Integer`, `Long`, `BigDecimal`, and every other `Number` subtype unless a more specific configuration overrides it.
 
@@ -244,7 +258,7 @@ When a column is added by `EasyGrid` and no explicit header has been set on it, 
 Nested properties can be referenced using dot notation:
 
 ```java
-EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class,
+EasyGrid<Person> easyGrid = new EasyGrid<>(Person.class,
     "firstName", "lastName", "address.city", "address.postalCode");
 
 easyGrid.getColumn("address.city")
@@ -259,8 +273,7 @@ easyGrid.getColumn("address.city")
 ## 7. Usage Example — Complete
 
 ```java
-Grid<Person> grid = new Grid<>();
-EasyGrid<Person> easyGrid = new EasyGrid<>(grid, Person.class);
+EasyGrid<Person> easyGrid = new EasyGrid<>(Person.class);
 
 // Column ordering and visibility
 easyGrid.setColumnOrder("firstName", "lastName", "email", "birthDate", "age", "subscriber");
@@ -279,9 +292,9 @@ easyGrid.getColumn("firstName")
 easyGrid.getColumn("age")
     .setTextAlign(ColumnTextAlign.END);
 
-// Data binding and adding to layout — done on the Grid directly
-grid.setItems(personService.findAll());
-add(grid);
+// Data binding and adding to layout
+easyGrid.setItems(personService.findAll());
+add(easyGrid);
 ```
 
 ## 8. Dependencies

@@ -4,7 +4,7 @@
 
 The Easy Grid Add-on provides `EasyGrid<T>`, a Vaadin `Composite` component that wraps an internally created `Grid<T>`. It uses reflection to discover bean properties, maps them to appropriately typed and formatted columns, and provides a clean Java API for controlling column ordering and type-specific rendering.
 
-`EasyGrid<T>` is a component — it is added to the layout directly. Data binding and all other standard `Grid` features are accessed directly on the `EasyGrid` instance, which delegates them to the wrapped `Grid`. The wrapped `Grid` is accessible via `getGrid()` for any configuration not covered by the delegating API.
+`EasyGrid<T>` is a component — it is added to the layout directly. Data binding and all other standard `Grid` features are accessed directly on the `EasyGrid` instance, which delegates them to the wrapped `Grid`. The wrapped `Grid` is accessible via `getWrappedGrid()` for any configuration not covered by the delegating API.
 
 For advanced cases where a custom `Grid` subclass must be supplied (e.g. `TreeGrid`), use `EasyGridWrapper<T, GRID>` instead — it accepts a caller-provided `GRID extends Grid<T>` and otherwise provides the same API.
 
@@ -76,7 +76,7 @@ EasyGridWrapper<Person, TreeGrid<Person>> wrapper =
 wrapper.setItems(personService.findAll());
 add(wrapper);
 // access the wrapped grid for TreeGrid-specific configuration
-wrapper.getGrid().setItemHierarchyData(...);
+wrapper.getWrappedGrid().setItemHierarchyData(...);
 ```
 
 `EasyGrid` also provides a typed overload for columns not backed by a named bean property:
@@ -169,7 +169,7 @@ Column display configuration is resolved through a three-level tree, from most t
 | Level | API | Scope |
 |---|---|---|
 | **Column** | `EasyColumn` setters | One specific column |
-| **Instance** | `EasyGrid.forType(Class)` | All columns of that type in one grid |
+| **Instance** | `EasyGrid.typeConfiguration(Class)` | All columns of that type in one grid |
 | **Global** | `GlobalEasyGridConfiguration.forType(Class)` | All grids in the application |
 
 Within each level the class hierarchy is walked before the tree falls through to the next level (scope-first). The full resolution order for a `Foo extends Entity` column is:
@@ -190,10 +190,10 @@ easyGrid.addColumn("active").setNullRepresentation("—");
 easyGrid.addColumn("salary").setTextAlign(ColumnTextAlign.END);
 ```
 
-**Instance level** — `EasyGrid.forType(Class)` returns the instance-level `ColumnConfiguration` for a type. Changes apply to every column of that type on this grid:
+**Instance level** — `EasyGrid.typeConfiguration(Class)` returns the instance-level `ColumnConfiguration` for a type. Changes apply to every column of that type on this grid:
 
 ```java
-easyGrid.forType(BigDecimal.class)
+easyGrid.typeConfiguration(BigDecimal.class)
     .setRendererFactory(NumberRenderers.of("%,.2f", Locale.US));
 ```
 
@@ -211,7 +211,7 @@ The `nullRepresentation` property controls what is displayed when a column value
 
 ```java
 // All columns in this grid show "–" for null
-easyGrid.forType(Object.class).setNullRepresentation("–");
+easyGrid.typeConfiguration(Object.class).setNullRepresentation("–");
 
 // Only the "email" column shows "(none)" for null
 easyGrid.addColumn("email").setNullRepresentation("(none)");

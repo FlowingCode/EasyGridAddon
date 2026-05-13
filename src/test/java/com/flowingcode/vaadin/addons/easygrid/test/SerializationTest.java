@@ -2,14 +2,14 @@
  * #%L
  * Easy Grid Add-on
  * %%
- * Copyright (C) 2023 Flowing Code
+ * Copyright (C) 2020 - 2026 Flowing Code
  * %%
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+ * 
  *      http://www.apache.org/licenses/LICENSE-2.0
- *
+ * 
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -19,14 +19,17 @@
  */
 package com.flowingcode.vaadin.addons.easygrid.test;
 
-import com.flowingcode.vaadin.addons.easygrid.EasyGridAddon;
+import com.flowingcode.vaadin.addons.easygrid.EasyGrid;
+import com.flowingcode.vaadin.addons.easygrid.model.Person;
+import com.vaadin.flow.component.UI;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import org.junit.Assert;
+import java.util.Locale;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class SerializationTest {
 
@@ -42,11 +45,19 @@ public class SerializationTest {
   }
 
   @Test
-  public void testSerialization() throws ClassNotFoundException, IOException {
+  public void testSerialization() throws Exception {
+    EasyGrid<Person> easyGrid;
     try {
-      testSerializationOf(new EasyGridAddon());
-    } catch (Exception e) {
-      Assert.fail("Problem while testing serialization: " + e.getMessage());
+      UI ui = Mockito.mock(UI.class);
+      Mockito.when(ui.getLocale()).thenReturn(Locale.ENGLISH);
+      UI.setCurrent(ui);
+      easyGrid = new EasyGrid<>(Person.class,
+          "firstName", "lastName", "birthDate", "age", "subscriber");
+    } finally {
+      UI.setCurrent(null);
     }
+
+    testSerializationOf(easyGrid);
   }
+
 }

@@ -17,20 +17,23 @@
  * limitations under the License.
  * #L%
  */
-
 package com.flowingcode.vaadin.addons.easygrid;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.Route;
+/**
+ * Unchecked wrapper for {@link ReflectiveOperationException}, used to propagate reflective errors
+ * without requiring callers to declare or catch checked exceptions.
+ */
+public class RuntimeReflectiveOperationException extends RuntimeException {
 
-@SuppressWarnings("serial")
-@Route("")
-public class DemoView extends VerticalLayout implements BeforeEnterObserver {
+  private static final long serialVersionUID = 1L;
 
-  @Override
-  public void beforeEnter(BeforeEnterEvent event) {
-    event.forwardTo(EasyGridDemoView.class);
+  /**
+   * Creates a new instance wrapping the given cause.
+   *
+   * @param cause the cause to wrap
+   */
+  public RuntimeReflectiveOperationException(Throwable cause) {
+    super(cause);
   }
+
 }

@@ -17,20 +17,20 @@
  * limitations under the License.
  * #L%
  */
+package com.flowingcode.vaadin.addons.easygrid.renderers;
 
-package com.flowingcode.vaadin.addons.easygrid;
+import com.vaadin.flow.data.renderer.Renderer;
+import com.vaadin.flow.function.SerializableFunction;
+import com.vaadin.flow.function.ValueProvider;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.Route;
+/**
+ * A named functional interface that creates a {@link Renderer} for a grid column given a
+ * {@link com.vaadin.flow.function.ValueProvider}.
+ *
+ * @param <T> the grid bean type
+ * @param <V> the column value type
+ */
+@FunctionalInterface
+public interface RendererFactory<T, V> extends SerializableFunction<ValueProvider<T, V>, Renderer<T>> {
 
-@SuppressWarnings("serial")
-@Route("")
-public class DemoView extends VerticalLayout implements BeforeEnterObserver {
-
-  @Override
-  public void beforeEnter(BeforeEnterEvent event) {
-    event.forwardTo(EasyGridDemoView.class);
-  }
 }

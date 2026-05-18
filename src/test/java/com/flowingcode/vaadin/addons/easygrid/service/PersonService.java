@@ -17,20 +17,26 @@
  * limitations under the License.
  * #L%
  */
+package com.flowingcode.vaadin.addons.easygrid.service;
 
-package com.flowingcode.vaadin.addons.easygrid;
+import com.flowingcode.vaadin.addons.easygrid.data.PersonData;
+import com.flowingcode.vaadin.addons.easygrid.model.Person;
+import java.util.List;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.Route;
+public class PersonService {
 
-@SuppressWarnings("serial")
-@Route("")
-public class DemoView extends VerticalLayout implements BeforeEnterObserver {
+  private final PersonData personData = new PersonData();
 
-  @Override
-  public void beforeEnter(BeforeEnterEvent event) {
-    event.forwardTo(EasyGridDemoView.class);
+  public List<Person> fetch(int offset, int limit) {
+    return personData.getPersons().stream().skip(offset).limit(limit).toList();
   }
+
+  public int count() {
+    return personData.getPersons().size();
+  }
+
+  public List<Person> fetchAll() {
+    return personData.getPersons();
+  }
+
 }

@@ -17,20 +17,23 @@
  * limitations under the License.
  * #L%
  */
+package com.flowingcode.vaadin.addons.easygrid.model;
 
-package com.flowingcode.vaadin.addons.easygrid;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
-import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
-import com.vaadin.flow.router.Route;
-
-@SuppressWarnings("serial")
-@Route("")
-public class DemoView extends VerticalLayout implements BeforeEnterObserver {
-
-  @Override
-  public void beforeEnter(BeforeEnterEvent event) {
-    event.forwardTo(EasyGridDemoView.class);
-  }
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Getter
+@Setter
+public class Address {
+  
+  private String street;
+  private int number;
+  private String postalCode;
+  private String city;
+  
 }

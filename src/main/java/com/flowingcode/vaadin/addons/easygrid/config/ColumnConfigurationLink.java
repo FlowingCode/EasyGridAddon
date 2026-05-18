@@ -64,7 +64,8 @@ final class ColumnConfigurationLink<V> implements ColumnConfiguration<V> {
 
   @Override
   public ColumnConfiguration<V> setFormatter(SerializableFunction<V, String> formatter) {
-    primary.setFormatter(formatter);
+    primary.setRendererFactory(
+        getter -> new ColumnConfigurationTextRenderer<>(getter, this, formatter));
     return this;
   }
 

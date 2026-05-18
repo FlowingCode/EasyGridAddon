@@ -1,15 +1,17 @@
-[![Published on Vaadin Directory](https://img.shields.io/badge/Vaadin%20Directory-published-00b4f0.svg)](https://vaadin.com/directory/component/easy-grid-addon)
-[![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/app-layout-addon.svg)](https://vaadin.com/directory/component/easy-grid-addon)
+[![Published on Vaadin Directory](https://img.shields.io/badge/Vaadin%20Directory-published-00b4f0.svg)](https://vaadin.com/directory/component/easy-grid-add-on)
+[![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/easy-grid-add-on.svg)](https://vaadin.com/directory/component/easy-grid-add-on)
 [![Build Status](https://jenkins.flowingcode.com/job/EasyGrid-addon/badge/icon)](https://jenkins.flowingcode.com/job/EasyGrid-addon)
 [![Maven Central](https://img.shields.io/maven-central/v/com.flowingcode.vaadin.addons/easy-grid-addon)](https://mvnrepository.com/artifact/com.flowingcode.vaadin.addons/easy-grid-addon)
 
-# Easy Grid Add-on
+# Easy Grid Add-On
 
-This is a template project for building new Vaadin 24 add-ons
+Easy Grid Add-On simplifies the creation and configuration of Vaadin Grid components through automatic column discovery, a fluent typed-column API, and per-column/instance/global configuration.
 
 ## Features
 
-* List the features of your add-on in here
+* Automatic column discovery from bean properties
+* Fluent typed-column API with per-property customization (formatter, renderer, null representation, alignment)
+* Type-aware configuration at per-column, per-instance, and global levels
 
 ## Online demo
 
@@ -17,7 +19,7 @@ This is a template project for building new Vaadin 24 add-ons
 
 ## Download release
 
-[Available in Vaadin Directory](https://vaadin.com/directory/component/easy-grid-addon)
+[Available in Vaadin Directory](https://vaadin.com/directory/component/easy-grid-add-on)
 
 ### Maven install
 
@@ -75,13 +77,23 @@ Then, follow these steps for creating a contribution:
 
 This add-on is distributed under Apache License 2.0. For license terms, see LICENSE.txt.
 
-EASY_GRID_ADDON is written by Flowing Code S.A.
+Easy Grid Add-On is written by Flowing Code S.A.
 
 # Developer Guide
 
 ## Getting started
 
-Add your code samples in this section
+```java
+// Auto-discover columns from bean properties
+EasyGrid<Person> grid = new EasyGrid<>(Person.class);
+grid.setItems(personService.findAll());
+add(grid);
+
+// Or specify columns explicitly
+EasyGrid<Person> grid = new EasyGrid<>(Person.class, "firstName", "lastName", "email");
+grid.setItems(personService.findAll());
+add(grid);
+```
 
 ## Special configuration when using Spring
 

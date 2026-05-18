@@ -1,3 +1,7 @@
+# Feature: Row Actions (Roadmap)
+
+> **Note:** This feature is planned for a future iteration and is not yet implemented.
+
 # Feature: Row Actions
 
 Row actions are buttons or menu items displayed in a dedicated actions column, created and managed by `EasyGrid` on the wrapped grid.

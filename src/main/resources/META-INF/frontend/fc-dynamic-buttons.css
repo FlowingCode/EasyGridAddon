@@ -1,0 +1,6 @@
+fc-dynamic-buttons {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: var(--fc-dynamic-buttons-gap, 0.25rem);
+}

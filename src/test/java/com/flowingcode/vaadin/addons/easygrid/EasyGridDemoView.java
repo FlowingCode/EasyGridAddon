@@ -41,6 +41,7 @@ public class EasyGridDemoView extends TabbedDemo {
     addDemo(ColumnConfigurationDemo.class);
     addDemo(ConfigurationHierarchyDemo.class);
     addDemo(TypedColumnDemo.class);
+    addDemo(DynamicButtonsDemo.class);
     setSizeFull();
   }
 }

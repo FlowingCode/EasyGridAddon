@@ -35,6 +35,12 @@ export interface ButtonDefinition {
   disabled?: boolean;
   /** Icon configuration applied to a `<vaadin-icon>` in the prefix slot. */
   icon?: IconDefinition;
+  /** CSS class names applied to the `<vaadin-button>` host element. */
+  class?: string | null;
+  /** Inline CSS style applied to the `<vaadin-button>` host element. */
+  style?: string | null;
+  /** Tooltip shown as a native browser title on the `<vaadin-button>` host element. */
+  title?: string | null;
 }
 
 @customElement('fc-dynamic-buttons')
@@ -57,8 +63,13 @@ export class DynamicButtons extends LitElement {
         const iconOnly = btn.icon && !btn.label;
         const theme = [iconOnly ? 'icon' : '', btn.theme ?? ''].join(' ').trim();
         return html`
-          <vaadin-button theme="${theme}" ?disabled=${btn.disabled ?? false}
-            @click=${() => this.dispatchEvent(new CustomEvent('button-click', { detail: { index }, bubbles: true, composed: true }))}>
+          <vaadin-button 
+		    theme="${theme}" 
+		    ?disabled=${btn.disabled ?? false}
+            class=${btn.class || nothing} 
+			style=${btn.style || nothing} 
+			title=${btn.title || nothing}
+            @click=${() => this.dispatchEvent(new CustomEvent('dynamic-button-click', { detail: { index }, bubbles: true, composed: true }))}>
             ${btn.icon
               ? html`<vaadin-icon
                   slot="prefix"

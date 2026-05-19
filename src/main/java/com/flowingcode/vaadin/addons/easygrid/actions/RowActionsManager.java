@@ -20,16 +20,14 @@
 
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
-import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HtmlComponent;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.icon.AbstractIcon;
 import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import lombok.NonNull;
 
 /**
@@ -54,12 +52,13 @@ public class RowActionsManager<T> implements Serializable {
     this.grid = grid;
   }
 
-  public EasyRowAction<T> addRowAction(String label,
-      ValueProvider<T, Component> iconProvider,
+  public <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
+      ValueProvider<T, String> labelProvider,
+      ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
-    EasyRowAction<T> action = new EasyRowAction<>(label, iconProvider, handler);
+    EasyRowAction<T> action = new EasyRowAction<>(labelProvider, iconProvider, handler);
     actions.add(action);
-    createActionsColumnIfNeeded();
+    updateRenderer();
     setColumnCount(actions.size());
     return action;
   }
@@ -96,15 +95,16 @@ public class RowActionsManager<T> implements Serializable {
     return Collections.unmodifiableList(actions);
   }
 
-  private void createActionsColumnIfNeeded() {
-    if (this.actionsColumn != null) {
-      this.actionsColumn = grid.addComponentColumn(row -> {
-        HtmlComponent container = new HtmlComponent("grid-buttons");
-        actions.stream().map(action -> action.createElement(row))
-            .filter(Objects::nonNull)
-            .forEach(container.getElement()::appendChild);
-        return container;
-      });
+  private void updateRenderer() {
+    var renderer = new LitRendererBuilder<T>("actions");
+    renderer.append("<fc-dynamic-buttons>");
+    actions.forEach(action -> action.updateRenderer(renderer));
+    renderer.append("</fc-dynamic-buttons>");
+
+    if (actionsColumn == null) {
+      actionsColumn = grid.addColumn(renderer.build());
+    } else {
+      actionsColumn.setRenderer(renderer.build());
     }
   }
 
@@ -117,5 +117,6 @@ public class RowActionsManager<T> implements Serializable {
   public Grid.Column<T> getActionsColumn() {
     return actionsColumn;
   }
+
 
 }

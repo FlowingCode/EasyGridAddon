@@ -20,9 +20,6 @@
 package com.flowingcode.vaadin.addons.easygrid;
 
 import com.flowingcode.vaadin.addons.demo.DemoSource;
-import com.flowingcode.vaadin.addons.easygrid.actions.ButtonDefinition;
-import com.flowingcode.vaadin.addons.easygrid.actions.DynamicButtons;
-import com.flowingcode.vaadin.addons.easygrid.actions.IconDefinition;
 import com.flowingcode.vaadin.addons.easygrid.model.Person;
 import com.flowingcode.vaadin.addons.easygrid.service.PersonService;
 import com.vaadin.flow.component.html.Div;
@@ -44,24 +41,12 @@ public class DynamicButtonsDemo extends Div {
     var grid = new EasyGrid<>(Person.class);
     grid.setItems(service.fetchAll());
 
-    grid.addComponentColumn(person -> {
-      var buttons = new DynamicButtons(
-          ButtonDefinition.ofLabel("Edit")
-              .icon(IconDefinition.of(VaadinIcon.EDIT))
-              .theme("tertiary"),
-          ButtonDefinition.ofIcon(IconDefinition.of(VaadinIcon.TRASH))
-              .theme("error tertiary icon"));
-
-      buttons.addButtonClickListener(e -> {
-        if (e.getIndex() == 0) {
-          Notification.show("Edit: " + person.getFirstName() + " " + person.getLastName());
-        } else {
-          Notification.show("Delete: " + person.getFirstName() + " " + person.getLastName());
-        }
-      });
-
-      return buttons;
-    }).setHeader("Actions");
+    grid.addRowAction("Edit", VaadinIcon.EDIT, person -> {
+      Notification.show("Edit: " + person.getFirstName() + " " + person.getLastName());
+    }); // tertiary
+    grid.addRowAction(VaadinIcon.TRASH, person -> {
+      Notification.show("Delete: " + person.getFirstName() + " " + person.getLastName());
+    });
 
     add(grid);
     setSizeFull();

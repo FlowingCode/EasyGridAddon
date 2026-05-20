@@ -56,6 +56,9 @@ public final class EasyRowAction<T>
   private final ValueProvider<T, AbstractIcon<?>> iconProvider;
   private final SerializableConsumer<T>  actionHandler;
 
+  private static final String[] ICON_ATTRIBUTE_NAMES = new String[] {
+      "icon", "src", "symbol", "ligature", "char", "fontFamily", "iconClass", "size"};
+
   private final Element element = new Element("easy-row-action");
   // private final ThemeList themeList = new ThemeListImpl();
   //
@@ -233,10 +236,12 @@ public final class EasyRowAction<T>
 
   void updateRenderer(LitRendererBuilder<T> renderer) {
     
-    // if visible?
-    // if (visibleWhen != null && !visibleWhen.test(item)) {
-    // return null;
-    // }
+    // "${item.actions[1] ? html`<vaadin-button title=${item.actions[2]}>Click</vaadin-button>` :
+    // `${item.actions[3]}`}")
+
+    if (visibleWhen != null) {
+      renderer.beginCondition(visibleWhen);
+    }
 
     renderer.append("<vaadin-button");
     renderer.stringAttribute("label", labelProvider);
@@ -262,37 +267,32 @@ public final class EasyRowAction<T>
         } else if (icon instanceof FontIcon) {
           renderer.copyAttributes(icon, "ligature", "char", "fontFamily", "iconClass");
         } else {
-          renderer.copyAttributes(icon, "icon");
-          renderer.copyAttributes(icon, "src", "symbol");
-          renderer.copyAttributes(icon, "ligature", "char", "fontFamily", "iconClass");
+          renderer.copyAttributes(icon, ICON_ATTRIBUTE_NAMES);
         }
       } else {
-        // ValueProvider<T, JsonValue> v = item -> {
-        // return JsonSerializer.serMap.<T,JsonValue>of();
-        // .icon=${btn.icon.icon ?? nothing}
-        // .src=${btn.icon.src ?? nothing}
-        // .symbol=${btn.icon.symbol ?? nothing}
-        // .iconClass=${btn.icon.iconClass ?? nothing}
-        // .char=${btn.icon.char ?? nothing}
-        // .ligature=${btn.icon.ligature ?? nothing}
-        // .fontFamily=${btn.icon.fontFamily ?? nothing}
-        // .size=${btn.icon.size ?? nothing}
-        // };
-
-        ValueProvider<T, Element> z = item -> iconProvider.apply(item).getElement();
-        renderer.stringAttribute("icon", item -> z.apply(item).getAttribute("icon"));
-        renderer.stringAttribute("size", item -> z.apply(item).getAttribute("size"));
-        renderer.stringAttribute("src", item -> z.apply(item).getAttribute("src"));
-        renderer.stringAttribute("symbol", item -> z.apply(item).getAttribute("symbol"));
-        renderer.stringAttribute("ligature", item -> z.apply(item).getAttribute("ligature"));
-        renderer.stringAttribute("char", item -> z.apply(item).getAttribute("char"));
-        renderer.stringAttribute("fontFamily", item -> z.apply(item).getAttribute("fontFamily"));
-        renderer.stringAttribute("iconClass", item -> z.apply(item).getAttribute("iconClass"));
+        var index = renderer.addObjectProperty(item -> {
+          var el = iconProvider.apply(item).getElement();
+          var map = new java.util.LinkedHashMap<String, String>();
+          for (var name : ICON_ATTRIBUTE_NAMES) {
+            var v = el.getAttribute(name);
+            if (v != null) {
+              map.put(name, v);
+            }
+          }
+          return map;
+        });
+        for (var name : ICON_ATTRIBUTE_NAMES) {
+          renderer.nestedStringAttribute("." + name, index, name);
+        }
       }
       renderer.append(">");
     }
     
     renderer.append("</vaadin-button>");
+
+    if (visibleWhen != null) {
+      renderer.endCondition();
+    }
   }
 
 }

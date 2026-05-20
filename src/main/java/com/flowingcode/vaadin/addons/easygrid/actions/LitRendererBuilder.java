@@ -5,6 +5,7 @@ import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.SerializableBiConsumer;
+import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -61,8 +62,13 @@ final class LitRendererBuilder<T> {
     return renderer;
   }
 
-  // "${item.actions[1] ? html`<vaadin-button title=${item.actions[2]}>Click</vaadin-button>` :
-  // `${item.actions[3]}`}")
+  public int addObjectProperty(ValueProvider<T, ?> provider) {
+    return withProperty(provider);
+  }
+
+  public void nestedStringAttribute(String attrName, int idx, String key) {
+    template.append(" %s=${item.%s[%d]?.%s}".formatted(attrName, property, idx, key));
+  }
 
   public void booleanAttribute(String name, ValueProvider<T, Boolean> predicate) {
     if (predicate != null) {
@@ -97,6 +103,14 @@ final class LitRendererBuilder<T> {
     } else {
       return "${`" + value.replace("`", "\\`").replace("$", "\\$") + "`}";
     }
+  }
+
+  public void beginCondition(SerializablePredicate<T> predicate) {
+    template.append("${item.%s[%s] ? html`".formatted(property, withProperty(predicate::test)));
+  }
+
+  public void endCondition() {
+    template.append("` : undefined}");
   }
 
 }

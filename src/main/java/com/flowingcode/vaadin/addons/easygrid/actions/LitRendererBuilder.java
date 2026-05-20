@@ -47,7 +47,7 @@ final class LitRendererBuilder<T> {
   public LitRenderer<T> build() {
     LitRenderer<T> renderer = LitRenderer.of(template.toString());
     if (!properties.isEmpty()) {
-      renderer.withProperty("actions", t -> {
+      renderer.withProperty(property, t -> {
         var obj = Json.createObject();
         properties.forEach(property -> {
           var k = Integer.toString(property.index);

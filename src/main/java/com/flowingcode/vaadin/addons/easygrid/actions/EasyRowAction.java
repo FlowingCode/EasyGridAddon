@@ -190,7 +190,7 @@ public final class EasyRowAction<T>
       var dialog = new ConfirmDialog();
       dialog.setHeader(title);
       dialog.setText(message);
-      dialog.setConfirmText(cancelText);
+      dialog.setConfirmText(confirmText);
       dialog.setCancelable(true);
       dialog.setCancelText(cancelText);
       return dialog;
@@ -282,12 +282,12 @@ public final class EasyRowAction<T>
           return map;
         });
         for (var name : ICON_ATTRIBUTE_NAMES) {
-          renderer.nestedStringAttribute("." + name, index, name);
+          renderer.nestedStringAttribute(name, index, name);
         }
       }
-      renderer.append(">");
+      renderer.append("></vaadin-icon>");
     }
-    
+
     renderer.append("</vaadin-button>");
 
     if (visibleWhen != null) {

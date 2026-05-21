@@ -24,9 +24,6 @@ import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.icon.AbstractIcon;
-import com.vaadin.flow.component.icon.FontIcon;
-import com.vaadin.flow.component.icon.Icon;
-import com.vaadin.flow.component.icon.SvgIcon;
 import com.vaadin.flow.component.shared.HasThemeVariant;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.SerializableConsumer;
@@ -35,6 +32,8 @@ import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.SerializableSupplier;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -47,18 +46,22 @@ import lombok.NonNull;
  *
  * @param <T> the grid bean type
  */
-@Getter
 @SuppressWarnings("serial")
 public final class EasyRowAction<T>
     implements Serializable, HasStyle, HasThemeVariant<ButtonVariant> {
 
   private final ValueProvider<T, String> labelProvider;
   private final ValueProvider<T, AbstractIcon<?>> iconProvider;
-  private final SerializableConsumer<T>  actionHandler;
+  private final SerializableConsumer<T> actionHandler;
 
-  private static final String[] ICON_ATTRIBUTE_NAMES = new String[] {
-      "icon", "src", "symbol", "ligature", "char", "fontFamily", "iconClass", "size"};
+  private static final String[] ALL_ICON_ATTRIBUTE_NAMES = new String[] {
+      "icon", "src", ".symbol", ".ligature", ".char", ".fontFamily", ".iconClass"};
+  // private static final String[] ICON_ATTRIBUTE_NAMES = new String[] {"icon"};
+  // private static final String[] SVG_ICON_ATTRIBUTE_NAMES = new String[] {"src", ".symbol"};
+  // private static final String[] FONT_ICON_ATTRIBUTE_NAMES = new String[] {
+  // ".ligature", ".char", ".fontFamily", ".iconClass"};
 
+  @Getter
   private final Element element = new Element("easy-row-action");
   // private final ThemeList themeList = new ThemeListImpl();
   //
@@ -235,64 +238,49 @@ public final class EasyRowAction<T>
   }
 
   void updateRenderer(LitRendererBuilder<T> renderer) {
-    
-    // "${item.actions[1] ? html`<vaadin-button title=${item.actions[2]}>Click</vaadin-button>` :
-    // `${item.actions[3]}`}")
-
-    if (visibleWhen != null) {
-      renderer.beginCondition(visibleWhen);
-    }
-
-    renderer.append("<vaadin-button");
-    renderer.stringAttribute("label", labelProvider);
-    
-    if (enabledWhen != null) {
-      renderer.booleanAttribute("disabled", t -> !enabledWhen.test(t));
-    }
-
-    renderer.copyAttributes(this, "class", "style", "theme");
-    renderer.stringAttribute("title", tooltipProvider);
-
-    renderer.append(">");
-    
-    if (iconProvider != null) {
-      renderer.append("<vaadin-icon slot=\"prefix\"");
-      if (iconProvider instanceof Constant) {
-        AbstractIcon<?> icon = iconProvider.apply(null);
-        renderer.copyAttributes(icon, "size");
-        if (icon instanceof Icon) {
-          renderer.copyAttributes(icon, "icon");
-        } else if (icon instanceof SvgIcon) {
-          renderer.copyAttributes(icon, "src", "symbol");
-        } else if (icon instanceof FontIcon) {
-          renderer.copyAttributes(icon, "ligature", "char", "fontFamily", "iconClass");
-        } else {
-          renderer.copyAttributes(icon, ICON_ATTRIBUTE_NAMES);
+    renderer.withCondition(visibleWhen, () -> {
+      renderer.tag("vaadin-button", () -> {
+        renderer.bind("label", labelProvider);
+        if (enabledWhen != null) {
+          renderer.bindBoolean("disabled", t -> !enabledWhen.test(t));
         }
-      } else {
-        var index = renderer.addObjectProperty(item -> {
-          var el = iconProvider.apply(item).getElement();
-          var map = new java.util.LinkedHashMap<String, String>();
-          for (var name : ICON_ATTRIBUTE_NAMES) {
-            var v = el.getAttribute(name);
-            if (v != null) {
-              map.put(name, v);
+
+        renderer.copyAttributes(this, "class", "style", "theme");
+        renderer.bind("tooltip", tooltipProvider);
+
+        if (iconProvider != null) {
+          renderer.tag("fc-icon", () -> {
+            if (iconProvider instanceof Constant) {
+              AbstractIcon<?> icon = iconProvider.apply(null);
+              renderer.copyAttributes(icon, ALL_ICON_ATTRIBUTE_NAMES);
+            } else {
+              renderer.bindObject(".descriptor", iconDescriptor(iconProvider));
             }
-          }
-          return map;
-        });
-        for (var name : ICON_ATTRIBUTE_NAMES) {
-          renderer.nestedStringAttribute(name, index, name);
+          });
+        }
+      });
+    });
+
+  }
+
+  private ValueProvider<T, Map<String, Object>> iconDescriptor(
+      ValueProvider<T, AbstractIcon<?>> iconProvider) {
+    return item -> {
+      AbstractIcon<?> icon = iconProvider.apply(item);
+      if (icon == null) {
+        return null;
+      }
+      Map<String, Object> descriptor = new LinkedHashMap<>();
+      Element el = icon.getElement();
+      for (String name : ALL_ICON_ATTRIBUTE_NAMES) {
+        LitRendererBuilder.BindingType type = LitRendererBuilder.BindingType.of(name);
+        Object value = type.read(el, name);
+        if (value != null) {
+          descriptor.put(type.key(name), value);
         }
       }
-      renderer.append("></vaadin-icon>");
-    }
-
-    renderer.append("</vaadin-button>");
-
-    if (visibleWhen != null) {
-      renderer.endCondition();
-    }
+      return descriptor;
+    };
   }
 
 }

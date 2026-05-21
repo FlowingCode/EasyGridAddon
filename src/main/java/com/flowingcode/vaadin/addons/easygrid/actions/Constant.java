@@ -2,11 +2,10 @@ package com.flowingcode.vaadin.addons.easygrid.actions;
 
 import com.vaadin.flow.function.ValueProvider;
 import lombok.AccessLevel;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+@SuppressWarnings("serial")
 final class Constant<T, V> implements ValueProvider<T, V> {
 
   private final V value;
@@ -23,6 +22,5 @@ final class Constant<T, V> implements ValueProvider<T, V> {
   public V apply(T source) {
     return value;
   }
-
 
 }

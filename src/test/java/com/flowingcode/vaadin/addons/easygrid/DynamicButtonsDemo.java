@@ -41,12 +41,13 @@ public class DynamicButtonsDemo extends Div {
     var grid = new EasyGrid<>(Person.class);
     grid.setItems(service.fetchAll());
 
-    grid.addRowAction("Edit", VaadinIcon.EDIT, person -> {
+    grid.addRowAction("Edit", VaadinIcon.EDIT.create(), person -> {
       Notification.show("Edit: " + person.getFirstName() + " " + person.getLastName());
     }); // tertiary
     grid.addRowAction(VaadinIcon.TRASH, person -> {
       Notification.show("Delete: " + person.getFirstName() + " " + person.getLastName());
     });
+    grid.getActionsColumn().setHeader("ACTIONS");
 
     add(grid);
     setSizeFull();

@@ -1,5 +1,9 @@
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.component.dependency.JsModule;
+import com.vaadin.flow.component.dependency.Uses;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.AbstractIcon;
 import com.vaadin.flow.component.icon.Icon;
@@ -8,6 +12,9 @@ import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import lombok.NonNull;
 
+@CssImport(value = "./fc-dynamic-buttons.css", themeFor = "fc-dynamic-buttons")
+@JsModule("./fc-icon.ts")
+@Uses(Button.class)
 public interface HasRowActions<T> {
 
   RowActionsManager<T> getRowActionsManager();

@@ -56,7 +56,7 @@ public class RowActionsManager<T> implements Serializable {
       ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
-    EasyRowAction<T> action = new EasyRowAction<>(labelProvider, iconProvider, handler);
+    EasyRowAction<T> action = new EasyRowAction<T>(labelProvider, iconProvider, handler);
     actions.add(action);
     updateRenderer();
     setColumnCount(actions.size());

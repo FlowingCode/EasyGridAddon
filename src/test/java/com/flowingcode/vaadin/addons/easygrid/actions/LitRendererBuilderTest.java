@@ -1,16 +1,35 @@
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import com.vaadin.flow.component.HasElement;
+import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
+import com.vaadin.flow.function.ValueProvider;
+import elemental.json.JsonObject;
+import java.util.Map;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Test;
 
 public class LitRendererBuilderTest {
 
   private LitRendererBuilder<Object> newBuilder() {
     return new LitRendererBuilder<>("actions");
+  }
+
+  private LitRendererBuilder<Pojo> newPojoBuilder() {
+    return new LitRendererBuilder<>("actions");
+  }
+
+  private static JsonObject actionsFor(LitRenderer<Pojo> renderer, Pojo row) {
+    ValueProvider<Pojo, ?> vp = renderer.getValueProviders().get("actions");
+    assertNotNull("expected an 'actions' value provider", vp);
+    return (JsonObject) vp.apply(row);
   }
 
   // --- structural emission ---
@@ -342,5 +361,103 @@ public class LitRendererBuilderTest {
     assertEquals("foo", LitRendererBuilder.BindingType.ATTRIBUTE.key("foo"));
     assertEquals("foo", LitRendererBuilder.BindingType.PROPERTY.key(".foo"));
     assertEquals("foo", LitRendererBuilder.BindingType.BOOLEAN.key("?foo"));
+  }
+
+  // --- build() per case ---
+
+  @Test
+  public void buildLiteralOnlyHasNoActionsProvider() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("vaadin-button", () -> b.set("label", "OK"));
+    LitRenderer<Pojo> r = b.build();
+    assertNotNull(r);
+    assertFalse("no registered providers expected for a literal-only template",
+        r.getValueProviders().containsKey("actions"));
+  }
+
+  @Test
+  public void buildBindEmitsStringPerRow() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("vaadin-button", () -> b.bind("label", Pojo::getName));
+
+    JsonObject actions = actionsFor(b.build(), Pojo.builder().name("hello").build());
+    assertEquals("hello", actions.getString("0"));
+  }
+
+  @Test
+  public void buildBindBooleanEmitsBooleanPerRow() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("vaadin-button", () -> b.bindBoolean("disabled", Pojo::getActive));
+
+    JsonObject actions = actionsFor(b.build(), Pojo.builder().active(true).build());
+    assertTrue(actions.getBoolean("0"));
+  }
+
+  @Test
+  public void buildBindObjectEmitsNestedObjectPerRow() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("fc-icon", () -> b.bindObject(".descriptor",
+        row -> Map.of("icon", row.getIconName())));
+
+    JsonObject actions = actionsFor(b.build(), Pojo.builder().iconName("vaadin:check").build());
+    JsonObject descriptor = actions.getObject("0");
+    assertEquals("vaadin:check", descriptor.getString("icon"));
+  }
+
+  @Test
+  public void buildAddContentDynamicEmitsPerRowString() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("vaadin-button", () -> b.addContent(Pojo::getName));
+
+    JsonObject actions = actionsFor(b.build(), Pojo.builder().name("Click").build());
+    assertEquals("Click", actions.getString("0"));
+  }
+
+  @Test
+  public void buildWithConditionRegistersPredicateAsFirstProperty() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.withCondition(Pojo::getActive, () -> b.tag("vaadin-button", () -> {}));
+
+    JsonObject actions = actionsFor(b.build(), Pojo.builder().active(true).build());
+    assertTrue(actions.getBoolean("0"));
+  }
+
+  @Test
+  public void buildBindAttributesRegistersOnePerName() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("fc-icon", () -> b.bindAttributes(row -> {
+      Element el = new Element("vaadin-icon");
+      el.setAttribute("icon", row.getIconName());
+      el.setProperty("symbol", row.getName());
+      return (HasElement) () -> el;
+    }, "icon", ".symbol"));
+
+    JsonObject actions = actionsFor(b.build(),
+        Pojo.builder().iconName("vaadin:check").name("done").build());
+    assertEquals("vaadin:check", actions.getString("0"));
+    assertEquals("done", actions.getString("1"));
+  }
+
+  @Test
+  public void buildMixesLiteralAndDynamicProperties() {
+    LitRendererBuilder<Pojo> b = newPojoBuilder();
+    b.tag("vaadin-button", () -> {
+      b.set("theme", "primary");
+      b.bind("label", Pojo::getName);
+      b.bindBoolean("disabled", Pojo::getActive);
+    });
+    JsonObject actions = actionsFor(b.build(),
+        Pojo.builder().name("Save").active(false).build());
+    // literal "theme" doesn't register a provider — only label (idx 0) and disabled (idx 1)
+    assertEquals("Save", actions.getString("0"));
+    assertFalse(actions.getBoolean("1"));
+  }
+
+  @Value
+  @Builder
+  static class Pojo {
+    String name;
+    Boolean active;
+    String iconName;
   }
 }

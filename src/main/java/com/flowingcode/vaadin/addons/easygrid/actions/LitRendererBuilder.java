@@ -27,7 +27,8 @@ final class LitRendererBuilder<T> {
   }
 
   private String getFunctionName(int index) {
-    return property + "_handler" + index;
+    // LitRenderer.withFunction requires alphanumeric names — no underscores.
+    return property + "Handler" + index;
   }
 
   /** Package-private accessor for tests; returns the accumulated template source. */

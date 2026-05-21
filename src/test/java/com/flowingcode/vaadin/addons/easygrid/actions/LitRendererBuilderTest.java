@@ -10,6 +10,7 @@ import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
+import elemental.json.Json;
 import elemental.json.JsonObject;
 import java.util.Map;
 import lombok.Builder;
@@ -267,23 +268,71 @@ public class LitRendererBuilderTest {
     assertEquals("<x></x>", b.getTemplate());
   }
 
-  // --- withFunction ---
+  // --- withFunction / event ---
 
   @Test
   public void withFunctionDoesNotAlterTemplate() {
     LitRendererBuilder<Object> b = newBuilder();
-    b.withFunction("onClick", (item, args) -> {});
+    b.withFunction((item, args) -> {});
     b.tag("x", () -> {});
     assertEquals("<x></x>", b.getTemplate());
   }
 
   @Test
+  public void withFunctionReturnsSequentialIndices() {
+    LitRendererBuilder<Object> b = newBuilder();
+    assertEquals(0, b.withFunction((item, args) -> {}));
+    assertEquals(1, b.withFunction((item, args) -> {}));
+    assertEquals(2, b.withFunction((item, args) -> {}));
+  }
+
+  @Test
   public void withFunctionBuildSucceeds() {
     LitRendererBuilder<Object> b = newBuilder();
-    b.withFunction("onClick", (item, args) -> {});
+    b.withFunction((item, args) -> {});
     b.tag("x", () -> {});
-    // build() must not throw — the registered configuration callback runs on the LitRenderer.
-    org.junit.Assert.assertNotNull(b.build());
+    // build() must not throw — the registered handlers are bound to the LitRenderer.
+    assertNotNull(b.build());
+  }
+
+  @Test
+  public void eventEmitsListenerBinding() {
+    LitRendererBuilder<Object> b = newBuilder();
+    b.tag("x", () -> {
+      int idx = b.withFunction((item, args) -> {});
+      b.event("click", idx);
+    });
+    assertEquals("<x @click=${actionsHandler0}></x>", b.getTemplate());
+  }
+
+  @Test
+  public void eventUsesPropertyAsFunctionPrefix() {
+    LitRendererBuilder<Object> b = new LitRendererBuilder<>("widgets");
+    b.tag("x", () -> {
+      int idx = b.withFunction((item, args) -> {});
+      b.event("click", idx);
+    });
+    assertEquals("<x @click=${widgetsHandler0}></x>", b.getTemplate());
+  }
+
+  @Test
+  public void eventMultipleFunctionsKeepDistinctIndices() {
+    LitRendererBuilder<Object> b = newBuilder();
+    b.tag("x", () -> {
+      int a = b.withFunction((item, args) -> {});
+      int c = b.withFunction((item, args) -> {});
+      b.event("click", a);
+      b.event("dblclick", c);
+    });
+    assertEquals(
+        "<x @click=${actionsHandler0} @dblclick=${actionsHandler1}></x>", b.getTemplate());
+  }
+
+  @Test
+  public void eventRequiresOpenTag() {
+    LitRendererBuilder<Object> b = newBuilder();
+    int idx = b.withFunction((item, args) -> {});
+    assertThrows(IllegalStateException.class, () -> b.event("click", idx));
   }
 
   // --- escape behavior ---
@@ -396,8 +445,11 @@ public class LitRendererBuilderTest {
   @Test
   public void buildBindObjectEmitsNestedObjectPerRow() {
     LitRendererBuilder<Pojo> b = newPojoBuilder();
-    b.tag("fc-icon", () -> b.bindObject(".descriptor",
-        row -> Map.of("icon", row.getIconName())));
+    b.tag("fc-icon", () -> b.bindObject(".descriptor", row -> {
+      JsonObject obj = Json.createObject();
+      obj.put("icon", row.getIconName());
+      return obj;
+    }));
 
     JsonObject actions = actionsFor(b.build(), Pojo.builder().iconName("vaadin:check").build());
     JsonObject descriptor = actions.getObject("0");

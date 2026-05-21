@@ -103,6 +103,7 @@ public class RowActionsManager<T> implements Serializable {
 
     if (actionsColumn == null) {
       actionsColumn = grid.addColumn(renderer.build());
+      actionsColumn.setAutoWidth(true);
     } else {
       actionsColumn.setRenderer(renderer.build());
     }

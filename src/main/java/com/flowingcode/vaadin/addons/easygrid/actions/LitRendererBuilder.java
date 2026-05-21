@@ -26,6 +26,11 @@ final class LitRendererBuilder<T> {
     this.property = property;
   }
 
+  /** Package-private accessor for tests; returns the accumulated template source. */
+  String getTemplate() {
+    return template.toString();
+  }
+
   public LitRenderer<T> build() {
     LitRenderer<T> renderer = LitRenderer.of(template.toString());
     if (!properties.isEmpty()) {
@@ -50,11 +55,11 @@ final class LitRendererBuilder<T> {
 
   /**
    * Opens {@code <name}, runs {@code body}, then closes with {@code </name>}. The body should add
-   * attribute bindings first (via {@link #attribute}, {@link #bindAttribute}, {@link #bindBoolean},
-   * {@link #copy}, {@link #bindAttributes}) and then content (via nested {@link #tag},
-   * {@link #withCondition}, or {@link #append}). The opening {@code >} is emitted automatically
-   * the first time the body adds content, or at body-end for an empty tag. Tags nest to arbitrary
-   * depth.
+   * attribute bindings first (via {@link #set}, {@link #bind}, {@link #bindBoolean},
+   * {@link #bindObject}, {@link #copyAttributes}, {@link #bindAttributes}) and then content (via
+   * nested {@link #tag}, {@link #withCondition}, {@link #addContent}, or {@link #append}). The
+   * opening {@code >} is emitted automatically the first time the body adds content, or at
+   * body-end for an empty tag. Tags nest to arbitrary depth.
    */
   public void tag(String name, Runnable body) {
     finishOpeningTag();
@@ -105,10 +110,32 @@ final class LitRendererBuilder<T> {
       return;
     }
     if (value instanceof Constant) {
-      emitLiteralAttribute(name, value.apply(null));
+      emitLiteral(name, value.apply(null));
     } else {
       requireTagOpen();
       template.append(" %s=${item.%s[%s]}".formatted(name, property, register(value)));
+    }
+  }
+
+  /**
+   * Binds the current tag's content to a per-row value. A {@link Constant} is inlined via
+   * {@link #content(String)}; {@code null} provider is a no-op. The opening tag's {@code >} is
+   * closed first if needed.
+   */
+  public void addContent(ValueProvider<T, String> value) {
+    if (value == null) {
+      return;
+    }
+    if (value instanceof Constant) {
+      String str = value.apply(null);
+      if (str == null) {
+        return;
+      }
+      finishOpeningTag();
+      template.append("${`").append(escapeTemplateLiteral(str)).append("`}");
+    } else {
+      finishOpeningTag();
+      template.append("${item.%s[%s]}".formatted(property, register(value)));
     }
   }
 
@@ -136,7 +163,7 @@ final class LitRendererBuilder<T> {
    * </ul>
    * {@code null} values are no-ops.
    */
-  private void emitLiteralAttribute(String name, String value) {
+  private void emitLiteral(String name, String value) {
     if (value == null) {
       return;
     }
@@ -191,7 +218,7 @@ final class LitRendererBuilder<T> {
   public <C extends HasElement> void bindAttributes(ValueProvider<T, C> componentProvider,
       String... names) {
     if (names.length == 0) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException("at least one attribute name is required");
     }
     requireTagOpen();
     for (String name : names) {
@@ -226,11 +253,11 @@ final class LitRendererBuilder<T> {
   }
 
   private static String wrapAndEscapeTemplateCharacters(String value) {
-    if (value.indexOf('"') < 0) {
+    if (value.indexOf('"') < 0 && value.indexOf('`') < 0 && value.indexOf('\\') < 0
+        && !value.contains("${")) {
       return '"' + value + '"';
-    } else {
-      return "${`" + escapeTemplateLiteral(value) + "`}";
     }
+    return "${`" + escapeTemplateLiteral(value) + "`}";
   }
 
   private static String escapeTemplateLiteral(String value) {

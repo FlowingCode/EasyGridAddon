@@ -12,7 +12,7 @@ import com.vaadin.flow.function.SerializableConsumer;
 import com.vaadin.flow.function.ValueProvider;
 import lombok.NonNull;
 
-@CssImport(value = "./fc-dynamic-buttons.css", themeFor = "fc-dynamic-buttons")
+@CssImport(value = "./fc-dynamic-buttons.css")
 @JsModule("./fc-icon.ts")
 @Uses(Button.class)
 public interface HasRowActions<T> {

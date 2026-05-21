@@ -56,10 +56,6 @@ public final class EasyRowAction<T>
 
   private static final String[] ALL_ICON_ATTRIBUTE_NAMES = new String[] {
       "icon", "src", ".symbol", ".ligature", ".char", ".fontFamily", ".iconClass"};
-  // private static final String[] ICON_ATTRIBUTE_NAMES = new String[] {"icon"};
-  // private static final String[] SVG_ICON_ATTRIBUTE_NAMES = new String[] {"src", ".symbol"};
-  // private static final String[] FONT_ICON_ATTRIBUTE_NAMES = new String[] {
-  // ".ligature", ".char", ".fontFamily", ".iconClass"};
 
   @Getter
   private final Element element = new Element("easy-row-action");
@@ -240,12 +236,12 @@ public final class EasyRowAction<T>
   void updateRenderer(LitRendererBuilder<T> renderer) {
     renderer.withCondition(visibleWhen, () -> {
       renderer.tag("vaadin-button", () -> {
-        renderer.bind("label", labelProvider);
         if (enabledWhen != null) {
           renderer.bindBoolean("disabled", t -> !enabledWhen.test(t));
         }
 
-        renderer.copyAttributes(this, "class", "style", "theme");
+        renderer.copyAttributes(this, "class", "style");
+        renderer.set("theme", getTheme());
         renderer.bind("tooltip", tooltipProvider);
 
         if (iconProvider != null) {
@@ -258,9 +254,24 @@ public final class EasyRowAction<T>
             }
           });
         }
+
+        renderer.addContent(labelProvider);
       });
     });
+  }
 
+  /**
+   * Returns the {@code theme} attribute value for this action's {@code <vaadin-button>}, combining
+   * any user-set theme variants (e.g. {@code "primary"}) with {@code "icon"} when the button is
+   * icon-only (an icon is configured and no label provider was set). Returns {@code null} when no
+   * theme variant applies.
+   */
+  String getTheme() {
+    String theme = getElement().getAttribute("theme");
+    if (iconProvider != null && labelProvider == null) {
+      theme = theme == null || theme.isEmpty() ? "icon" : theme + " icon";
+    }
+    return theme;
   }
 
   private ValueProvider<T, Map<String, Object>> iconDescriptor(

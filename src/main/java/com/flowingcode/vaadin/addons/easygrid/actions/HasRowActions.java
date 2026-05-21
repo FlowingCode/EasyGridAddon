@@ -31,7 +31,7 @@ public interface HasRowActions<T> {
   }
 
   default EasyRowAction<T> addRowAction(
-      Icon iconTemplate,
+      @NonNull Icon iconTemplate,
       @NonNull SerializableConsumer<T> handler) {
     return addRowAction(null, iconTemplate, handler);
   }

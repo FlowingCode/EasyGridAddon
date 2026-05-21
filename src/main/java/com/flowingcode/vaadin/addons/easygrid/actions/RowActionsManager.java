@@ -107,15 +107,22 @@ public class RowActionsManager<T> implements Serializable {
     } else {
       actionsColumn.setRenderer(renderer.build());
     }
+
+    if (actions.size() == 1 && !actionsColumn.isVisible()) {
+      actionsColumn.setVisible(true);
+    }
   }
 
   /**
-   * Returns the {@link Grid.Column} that hosts the actions, or {@code null} if it has not been
-   * created yet.
+   * Returns the {@link Grid.Column} that hosts the actions.
    *
    * @return the actions column, or {@code null}
    */
   public Grid.Column<T> getActionsColumn() {
+    if (actionsColumn == null) {
+      updateRenderer();
+      actionsColumn.setVisible(false);
+    }
     return actionsColumn;
   }
 

@@ -234,7 +234,9 @@ public final class EasyRowAction<T>
   }
 
   void updateRenderer(LitRendererBuilder<T> renderer) {
+
     renderer.withCondition(visibleWhen, () -> {
+      int fn = renderer.withFunction((item, args) -> handleClick(item));
       renderer.tag("vaadin-button", () -> {
         if (enabledWhen != null) {
           renderer.bindBoolean("disabled", t -> !enabledWhen.test(t));
@@ -243,6 +245,7 @@ public final class EasyRowAction<T>
         renderer.copyAttributes(this, "class", "style");
         renderer.set("theme", getTheme());
         renderer.bind("tooltip", tooltipProvider);
+        renderer.event("click", fn);
 
         if (iconProvider != null) {
           renderer.tag("fc-icon", () -> {
@@ -258,6 +261,16 @@ public final class EasyRowAction<T>
         renderer.addContent(labelProvider);
       });
     });
+  }
+
+  private void handleClick(T item) {
+    if (confirmDialogSupplier != null) {
+      ConfirmDialog dialog = confirmDialogSupplier.get();
+      dialog.addConfirmListener(e -> actionHandler.accept(item));
+      dialog.open();
+    } else {
+      actionHandler.accept(item);
+    }
   }
 
   /**

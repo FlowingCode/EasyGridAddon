@@ -11,19 +11,23 @@ import elemental.json.Json;
 import elemental.json.JsonArray;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 import lombok.NonNull;
 
 final class LitRendererBuilder<T> {
 
   private final String property;
+
   private final StringBuilder template = new StringBuilder();
-  private final List<Consumer<LitRenderer<T>>> configuration = new ArrayList<>();
+  private List<SerializableBiConsumer<T, JsonArray>> functionHandlers = new ArrayList<>();
   private final List<ValueProvider<T, ?>> properties = new ArrayList<>();
   private boolean tagOpen = false;
 
   public LitRendererBuilder(@NonNull String property) {
     this.property = property;
+  }
+
+  private String getFunctionName(int index) {
+    return property + "_handler" + index;
   }
 
   /** Package-private accessor for tests; returns the accumulated template source. */
@@ -49,7 +53,10 @@ final class LitRendererBuilder<T> {
         return obj;
       });
     }
-    configuration.forEach(c -> c.accept(renderer));
+
+    for (int i = 0; i < functionHandlers.size(); i++) {
+      renderer.withFunction(getFunctionName(i), functionHandlers.get(i));
+    }
     return renderer;
   }
 
@@ -183,6 +190,15 @@ final class LitRendererBuilder<T> {
   }
 
   /**
+   * Emits a Lit event listener binding {@code @eventName=${functionName}}. {@code functionName}
+   * must reference a function previously registered via {@link #withFunction}.
+   */
+  public void event(String eventName, int functionIndex) {
+    requireTagOpen();
+    template.append(" @%s=${%s}".formatted(eventName, getFunctionName(functionIndex)));
+  }
+
+  /**
    * Binds a Lit boolean attribute {@code ?name=${...}} to a per-row predicate. {@code null} is a
    * no-op.
    */
@@ -228,8 +244,9 @@ final class LitRendererBuilder<T> {
     }
   }
 
-  public void withFunction(String functionName, SerializableBiConsumer<T, JsonArray> handler) {
-    configuration.add(lit -> lit.withFunction(functionName, handler));
+  public int withFunction(SerializableBiConsumer<T, JsonArray> handler) {
+    functionHandlers.add(handler);
+    return functionHandlers.size() - 1;
   }
 
   private int register(ValueProvider<T, ?> provider) {

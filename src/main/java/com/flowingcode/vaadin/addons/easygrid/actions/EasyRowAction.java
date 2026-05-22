@@ -52,6 +52,9 @@ public final class EasyRowAction<T>
   private final ValueProvider<T, AbstractIcon<?>> iconProvider;
   private final SerializableConsumer<T> actionHandler;
 
+  private static final String[] LIFTED_ICON_NAMES =
+      {"icon", "src", ".symbol", ".ligature", ".char", ".fontFamily", ".iconClass"};
+
   @Getter
   private final Element element = new Element("easy-row-action");
 
@@ -169,7 +172,7 @@ public final class EasyRowAction<T>
 
         if (iconProvider != null) {
           renderer.tag("fc-icon", () -> {
-            renderer.bindAllAttributesAndProperties(iconProvider);
+            renderer.bindAllAttributesAndProperties(iconProvider, LIFTED_ICON_NAMES);
           });
         }
 

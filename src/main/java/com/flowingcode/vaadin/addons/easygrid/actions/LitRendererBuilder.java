@@ -40,6 +40,7 @@ final class LitRendererBuilder<T> {
     return template.toString();
   }
 
+  /** Finalizes the template and builds the {@link LitRenderer}. */
   public LitRenderer<T> build() {
     LitRenderer<T> renderer = LitRenderer.of(template.toString());
     if (!properties.isEmpty()) {
@@ -68,10 +69,11 @@ final class LitRendererBuilder<T> {
   /**
    * Opens {@code <name}, runs {@code body}, then closes with {@code </name>}. The body should add
    * attribute bindings first (via {@link #set}, {@link #bind}, {@link #bindBoolean},
-   * {@link #bindObject}, {@link #copyAttributes}, {@link #bindAttributes}) and then content (via
-   * nested {@link #tag}, {@link #withCondition}, {@link #addContent}, or {@link #append}). The
-   * opening {@code >} is emitted automatically the first time the body adds content, or at
-   * body-end for an empty tag. Tags nest to arbitrary depth.
+   * {@link #bindObject}, {@link #copyAttributes}, {@link #bindAttributes},
+   * {@link #bindAllAttributesAndProperties}) and then content (via nested {@link #tag},
+   * {@link #withCondition}, {@link #addContent}, or {@link #append}). The opening {@code >} is
+   * emitted automatically the first time the body adds content, or at body-end for an empty tag.
+   * Tags nest to arbitrary depth.
    */
   public void tag(String name, Runnable body) {
     finishOpeningTag();
@@ -114,8 +116,8 @@ final class LitRendererBuilder<T> {
   }
 
   /**
-   * Binds an attribute or property to a per-row value. A {@link Constant} {@code value} is inlined
-   * at build time; {@code null} is a no-op.
+   * Binds an attribute or property to a per-row value. A {@code Constant} value is inlined at
+   * build time; {@code null} is a no-op.
    */
   public void bind(String name, ValueProvider<T, String> value) {
     if (value == null) {
@@ -130,9 +132,9 @@ final class LitRendererBuilder<T> {
   }
 
   /**
-   * Binds the current tag's content to a per-row value. A {@link Constant} is inlined via
-   * {@link #content(String)}; {@code null} provider is a no-op. The opening tag's {@code >} is
-   * closed first if needed.
+   * Binds the current tag's content to a per-row value. A {@code Constant} value is inlined at
+   * build time; {@code null} provider is a no-op. The opening tag's {@code >} is closed first if
+   * needed.
    */
   public void addContent(ValueProvider<T, String> value) {
     if (value == null) {
@@ -153,7 +155,7 @@ final class LitRendererBuilder<T> {
 
   /**
    * Binds an attribute or property to a per-row object value. The value is JSON-serialized at
-   * render time and passed through to Lit as-is — no {@link Constant} inlining and no
+   * render time and passed through to Lit as-is — no {@code Constant} inlining and no
    * prefix-aware dispatch beyond what the receiving element expects. {@code null} provider is a
    * no-op.
    */
@@ -232,10 +234,12 @@ final class LitRendererBuilder<T> {
     }
   }
 
-  public void copyAllAtttributesAndProperties(HasElement component) {
-    copyAllAtttributesAndPropertiesExcept(component);
-  }
-  
+  /**
+   * Snapshots all attributes and properties from {@code component}'s element — excluding names
+   * listed in {@code names} — and delegates each to {@link #set(String, String)}. Properties are
+   * emitted with a {@code .} prefix; attributes are emitted as-is. An empty {@code names} array
+   * copies everything.
+   */
   public void copyAllAtttributesAndPropertiesExcept(HasElement component, String... names) {
     Element element = component.getElement();
 
@@ -264,8 +268,9 @@ final class LitRendererBuilder<T> {
   }
 
   /**
-   * For each name, emits an HTML attribute bound per-row to the same-named attribute of the
-   * component returned by {@code componentProvider}.
+   * For each name in {@code names}, emits a per-row attribute or property binding that reads the
+   * corresponding value from the component returned by {@code componentProvider}, using
+   * prefix-aware dispatch.
    */
   public <C extends HasElement> void bindAttributes(ValueProvider<T, C> componentProvider,
       String... names) {
@@ -281,23 +286,36 @@ final class LitRendererBuilder<T> {
   }
 
   /**
-   * Binds per-row {@code .attr} and {@code .prop} objects on the current {@code <fc-icon>} tag
-   * from the component returned by {@code componentProvider}. All element attributes are collected
-   * into a map bound to {@code .attr}; all element properties are collected into a map bound to
-   * {@code .prop}. Empty maps are passed as {@code null}; a {@code null} component maps to
-   * {@code null} for both.
+   * Binds per-row {@code .attr} and {@code .prop} object properties on the current open tag,
+   * populated from all attributes and properties of the component returned by
+   * {@code componentProvider}. Attributes are collected into a map bound to {@code .attr};
+   * properties are collected into a map bound to {@code .prop}. Empty maps are passed as
+   * {@code null}; a {@code null} component maps to {@code null} for both.
+   *
+   * <p>Names listed in {@code liftedNames} are excluded from the maps and instead bound directly
+   * as individual attribute or property bindings on the target element (using the same
+   * prefix-aware dispatch as {@link #copyAttributes}). This allows elements with dedicated named
+   * properties (such as {@code <fc-icon>}) to receive well-known fields by name rather than
+   * through the generic spread maps. For a {@code Constant} provider, lifting is performed via
+   * {@link #copyAttributes} and the remainder via {@link #copyAllAtttributesAndPropertiesExcept}.
    *
    * @param <C> the component type
    * @param componentProvider provides the source component for each row item
+   * @param liftedNames attribute/property names (with optional {@code .} or {@code ?} prefix) to
+   *        bind directly instead of through the maps
    */
   public <C extends HasElement> void bindAllAttributesAndProperties(
-      ValueProvider<T, C> componentProvider) {
+      ValueProvider<T, C> componentProvider, String... liftedNames) {
     if (componentProvider instanceof Constant) {
       C component = componentProvider.apply(null);
       if (component != null) {
-        copyAllAtttributesAndProperties(component);
+        copyAllAtttributesAndPropertiesExcept(component, liftedNames);
+        copyAttributes(component, liftedNames);
       }
       return;
+    }
+    if (liftedNames.length > 0) {
+      bindAttributes(componentProvider, liftedNames);
     }
     bindObject(".attr", item -> {
       C component = componentProvider.apply(item);
@@ -306,7 +324,8 @@ final class LitRendererBuilder<T> {
       }
       Element el = component.getElement();
       Map<String, Object> map = new LinkedHashMap<>();
-      el.getAttributeNames().forEach(name -> map.put(name, el.getAttribute(name)));
+      el.getAttributeNames().filter(excludingAttribute(liftedNames))
+          .forEach(name -> map.put(name, el.getAttribute(name)));
       return map.isEmpty() ? null : map;
     });
     bindObject(".prop", item -> {
@@ -316,11 +335,19 @@ final class LitRendererBuilder<T> {
       }
       Element el = component.getElement();
       Map<String, Object> map = new LinkedHashMap<>();
-      el.getPropertyNames().forEach(name -> map.put(name, el.getProperty(name)));
+      el.getPropertyNames().filter(excludingProperty(liftedNames))
+          .forEach(name -> map.put(name, el.getProperty(name)));
       return map.isEmpty() ? null : map;
     });
   }
 
+  /**
+   * Registers a server-side function handler and returns its index for use with
+   * {@link #event(String, int)}.
+   *
+   * @param handler the function handler invoked when the client fires the event
+   * @return the index of the registered function
+   */
   public int withFunction(SerializableBiConsumer<T, JsonArray> handler) {
     functionHandlers.add(handler);
     return functionHandlers.size() - 1;

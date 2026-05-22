@@ -10,7 +10,11 @@ import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 import lombok.NonNull;
 
 final class LitRendererBuilder<T> {
@@ -18,7 +22,7 @@ final class LitRendererBuilder<T> {
   private final String property;
 
   private final StringBuilder template = new StringBuilder();
-  private List<SerializableBiConsumer<T, JsonArray>> functionHandlers = new ArrayList<>();
+  private final List<SerializableBiConsumer<T, JsonArray>> functionHandlers = new ArrayList<>();
   private final List<ValueProvider<T, ?>> properties = new ArrayList<>();
   private boolean tagOpen = false;
 
@@ -228,6 +232,37 @@ final class LitRendererBuilder<T> {
     }
   }
 
+  public void copyAllAtttributesAndProperties(HasElement component) {
+    copyAllAtttributesAndPropertiesExcept(component);
+  }
+  
+  public void copyAllAtttributesAndPropertiesExcept(HasElement component, String... names) {
+    Element element = component.getElement();
+
+    element.getAttributeNames().filter(excludingAttribute(names)).forEach(name->{
+      set(name, element.getAttribute(name));
+    });
+    
+    element.getPropertyNames().filter(excludingProperty(names)).forEach(name->{
+      set("."+name, element.getProperty(name));
+    });
+  }
+
+  private Predicate<? super String> excludingAttribute(String[] names) {
+    return name -> {
+      for (String n : names) {
+        if (n.equals(name)) {
+          return false;
+        }
+      } 
+      return true;
+    };
+  }
+  
+  private Predicate<? super String> excludingProperty(String[] names) {
+    return name -> excludingAttribute(names).test("."+name);
+  }
+
   /**
    * For each name, emits an HTML attribute bound per-row to the same-named attribute of the
    * component returned by {@code componentProvider}.
@@ -243,6 +278,47 @@ final class LitRendererBuilder<T> {
       int idx = register(item -> type.read(componentProvider.apply(item).getElement(), name));
       template.append(" %s=${item.%s[%d]}".formatted(name, property, idx));
     }
+  }
+
+  /**
+   * Binds per-row {@code .attr} and {@code .prop} objects on the current {@code <fc-icon>} tag
+   * from the component returned by {@code componentProvider}. All element attributes are collected
+   * into a map bound to {@code .attr}; all element properties are collected into a map bound to
+   * {@code .prop}. Empty maps are passed as {@code null}; a {@code null} component maps to
+   * {@code null} for both.
+   *
+   * @param <C> the component type
+   * @param componentProvider provides the source component for each row item
+   */
+  public <C extends HasElement> void bindAllAttributesAndProperties(
+      ValueProvider<T, C> componentProvider) {
+    if (componentProvider instanceof Constant) {
+      C component = componentProvider.apply(null);
+      if (component != null) {
+        copyAllAtttributesAndProperties(component);
+      }
+      return;
+    }
+    bindObject(".attr", item -> {
+      C component = componentProvider.apply(item);
+      if (component == null) {
+        return null;
+      }
+      Element el = component.getElement();
+      Map<String, Object> map = new LinkedHashMap<>();
+      el.getAttributeNames().forEach(name -> map.put(name, el.getAttribute(name)));
+      return map.isEmpty() ? null : map;
+    });
+    bindObject(".prop", item -> {
+      C component = componentProvider.apply(item);
+      if (component == null) {
+        return null;
+      }
+      Element el = component.getElement();
+      Map<String, Object> map = new LinkedHashMap<>();
+      el.getPropertyNames().forEach(name -> map.put(name, el.getProperty(name)));
+      return map.isEmpty() ? null : map;
+    });
   }
 
   public int withFunction(SerializableBiConsumer<T, JsonArray> handler) {

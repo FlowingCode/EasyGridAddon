@@ -17,53 +17,76 @@ import lombok.NonNull;
 @Uses(Button.class)
 public interface HasRowActions<T> {
 
+  /**
+   * Returns the {@code RowActionsManager} that manages the actions column for this grid.
+   * Implementors must provide this instance; all default methods delegate to it.
+   *
+   * @return the row actions manager, never {@code null}
+   */
   RowActionsManager<T> getRowActionsManager();
 
   default EasyRowAction<T> addRowAction(@NonNull String label,
       @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(label, (ValueProvider<T, Icon>) null, handler);
-  }
-
-  default EasyRowAction<T> addRowAction(String label,
-      Icon iconTemplate,
-      @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(label, Constant.ofNullable(iconTemplate), handler);
+    return addRowAction(label, (ValueProvider<T,Icon>) null, handler);
   }
 
   default EasyRowAction<T> addRowAction(
-      @NonNull Icon iconTemplate,
+      String label,
+      Icon icon,
       @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(null, iconTemplate, handler);
+    return addRowAction(label, Constant.ofNullable(icon), handler);
   }
 
-  default EasyRowAction<T> addRowAction(String label, @NonNull IconFactory iconFactory,
+  default EasyRowAction<T> addRowAction(
+      @NonNull Icon icon,
       @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(label, Constant.of(iconFactory.create()), handler);
+    return addRowAction(null, icon, handler);
   }
 
-  default EasyRowAction<T> addRowAction(@NonNull IconFactory iconFactory,
+  default EasyRowAction<T> addRowAction(
+      String label, 
+      @NonNull IconFactory iconFactory,
       @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(null, Constant.of(iconFactory.create()), handler);
+    return addRowAction(label, iconFactory.create(), handler);
   }
 
-  default <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(String label,
+  default EasyRowAction<T> addRowAction(
+      @NonNull IconFactory iconFactory,
+      @NonNull SerializableConsumer<T> handler) {
+    return addRowAction(null, iconFactory.create(), handler);
+  }
+
+
+  default <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
+      @NonNull ValueProvider<T, ICON> iconProvider,
+      @NonNull SerializableConsumer<T> handler) {
+    return addRowAction(null, iconProvider, handler);
+  }
+
+  default <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
+      String label,
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
     return getRowActionsManager().addRowAction(Constant.ofNullable(label), iconProvider, handler);
   }
 
-  default <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
-      ValueProvider<T, ICON> iconProvider,
-      @NonNull SerializableConsumer<T> handler) {
-    return addRowAction(null, iconProvider, handler);
-  }
-
-  // Render all actions as a context menu (overflow menu) instead of inline buttons
+  /**
+   * Sets whether all actions should be rendered as an overflow (context) menu instead of inline
+   * buttons.
+   *
+   * @param asMenu {@code true} to render actions as a menu; {@code false} for inline buttons
+   */
   default void setRowActionsAsMenu(boolean asMenu) {
     getRowActionsManager().setRowActionsAsMenu(asMenu);
   }
 
-  // Access the underlying Grid.Column for header, width, freezing, etc.
+  /**
+   * Returns the {@code Grid.Column} that hosts the actions, creating it if it has not been added
+   * yet. The column is created hidden when no actions have been registered; it becomes visible
+   * automatically when the first action is added.
+   *
+   * @return the actions column
+   */
   default Grid.Column<T> getActionsColumn() {
     return getRowActionsManager().getActionsColumn();
   }

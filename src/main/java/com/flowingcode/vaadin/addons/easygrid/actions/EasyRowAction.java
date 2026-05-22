@@ -32,8 +32,6 @@ import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.SerializableSupplier;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -54,38 +52,9 @@ public final class EasyRowAction<T>
   private final ValueProvider<T, AbstractIcon<?>> iconProvider;
   private final SerializableConsumer<T> actionHandler;
 
-  private static final String[] ALL_ICON_ATTRIBUTE_NAMES = new String[] {
-      "icon", "src", ".symbol", ".ligature", ".char", ".fontFamily", ".iconClass"};
-
   @Getter
   private final Element element = new Element("easy-row-action");
-  // private final ThemeList themeList = new ThemeListImpl();
-  //
-  // private final class ThemeListImpl extends ListImpl {}
-  //
-  // private static abstract class ListImpl extends AbstractSet<String> implements ThemeList {
-  //
-  // private final List<String> list = new ArrayList<>();
-  //
-  // @Override
-  // public boolean add(String className) {
-  // if (list.contains(className)) {
-  // return false;
-  // }
-  // return list.add(className);
-  // }
-  //
-  // @Override
-  // public int size() {
-  // return list.size();
-  // }
-  //
-  // @Override
-  // public Iterator<String> iterator() {
-  // return list.iterator();
-  // }
-  // }
-  
+
   @SuppressWarnings("unchecked")
   <ICON extends AbstractIcon<ICON>> EasyRowAction(ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,
@@ -102,19 +71,6 @@ public final class EasyRowAction<T>
   private SerializablePredicate<T> enabledWhen;
   private ValueProvider<T, String> tooltipProvider;
   private SerializableSupplier<ConfirmDialog> confirmDialogSupplier;
-
-  // @Override
-  // public Style getStyle() {
-  // if (styles == null) {
-  // styles = new ElementStylePropertyMap(new StateNode());
-  // }
-  // return styles.getStyle();
-  // }
-  //
-  // @Override
-  // public Element getElement() {
-  // throw new UnsupportedOperationException();
-  // }
 
   /**
    * Sets a predicate that controls whether this action is visible for a given row item.
@@ -197,42 +153,6 @@ public final class EasyRowAction<T>
     return this;
   }
 
-  /**
-   * Returns the visibility predicate, or {@code null} if no visibility condition was set.
-   *
-   * @return the visibility predicate, or {@code null}
-   */
-  public SerializablePredicate<T> getVisibleWhen() {
-    return visibleWhen;
-  }
-
-  /**
-   * Returns the enablement predicate, or {@code null} if no enablement condition was set.
-   *
-   * @return the enablement predicate, or {@code null}
-   */
-  public SerializablePredicate<T> getEnabledWhen() {
-    return enabledWhen;
-  }
-
-  /**
-   * Returns the tooltip provider function, or {@code null} if no tooltip was set.
-   *
-   * @return the tooltip provider, or {@code null}
-   */
-  public SerializableFunction<T, String> getTooltipProvider() {
-    return tooltipProvider;
-  }
-
-  /**
-   * Returns {@code true} if a confirmation dialog is configured for this action.
-   *
-   * @return {@code true} if confirmation is required before executing the action
-   */
-  public boolean requiresConfirmation() {
-    return confirmDialogSupplier != null;
-  }
-
   void updateRenderer(LitRendererBuilder<T> renderer) {
 
     renderer.withCondition(visibleWhen, () -> {
@@ -241,20 +161,15 @@ public final class EasyRowAction<T>
         if (enabledWhen != null) {
           renderer.bindBoolean("disabled", t -> !enabledWhen.test(t));
         }
-
-        renderer.copyAttributes(this, "class", "style");
+        renderer.bind("title", tooltipProvider);
+        renderer.copyAllAtttributesAndPropertiesExcept(this, "theme", "title");
+        
         renderer.set("theme", getTheme());
-        renderer.bind("tooltip", tooltipProvider);
         renderer.event("click", fn);
 
         if (iconProvider != null) {
           renderer.tag("fc-icon", () -> {
-            if (iconProvider instanceof Constant) {
-              AbstractIcon<?> icon = iconProvider.apply(null);
-              renderer.copyAttributes(icon, ALL_ICON_ATTRIBUTE_NAMES);
-            } else {
-              renderer.bindObject(".descriptor", iconDescriptor(iconProvider));
-            }
+            renderer.bindAllAttributesAndProperties(iconProvider);
           });
         }
 
@@ -285,26 +200,6 @@ public final class EasyRowAction<T>
       theme = theme == null || theme.isEmpty() ? "icon" : theme + " icon";
     }
     return theme;
-  }
-
-  private ValueProvider<T, Map<String, Object>> iconDescriptor(
-      ValueProvider<T, AbstractIcon<?>> iconProvider) {
-    return item -> {
-      AbstractIcon<?> icon = iconProvider.apply(item);
-      if (icon == null) {
-        return null;
-      }
-      Map<String, Object> descriptor = new LinkedHashMap<>();
-      Element el = icon.getElement();
-      for (String name : ALL_ICON_ATTRIBUTE_NAMES) {
-        LitRendererBuilder.BindingType type = LitRendererBuilder.BindingType.of(name);
-        Object value = type.read(el, name);
-        if (value != null) {
-          descriptor.put(type.key(name), value);
-        }
-      }
-      return descriptor;
-    };
   }
 
 }

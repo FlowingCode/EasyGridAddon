@@ -164,15 +164,16 @@ public final class EasyRowAction<T>
         if (enabledWhen != null) {
           renderer.bindBoolean("disabled", t -> !enabledWhen.test(t));
         }
-        renderer.bind("title", tooltipProvider);
-        renderer.copyAllAtttributesAndPropertiesExcept(this, "theme", "title");
         
+        renderer.copyAllAtttributesAndPropertiesExcept(this, "theme", "title");
+        renderer.bind("title", tooltipProvider);
         renderer.set("theme", getTheme());
+
         renderer.event("click", fn);
 
         if (iconProvider != null) {
           renderer.tag("fc-icon", () -> {
-            renderer.bindAllAttributesAndProperties(iconProvider, LIFTED_ICON_NAMES);
+            renderer.spreadAllAttributesAndProperties(iconProvider, LIFTED_ICON_NAMES);
           });
         }
 

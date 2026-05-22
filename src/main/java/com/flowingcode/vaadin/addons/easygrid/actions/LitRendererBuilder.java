@@ -209,10 +209,10 @@ final class LitRendererBuilder<T> {
    * Binds a Lit boolean attribute {@code ?name=${...}} to a per-row predicate. {@code null} is a
    * no-op.
    */
-  public void bindBoolean(String name, ValueProvider<T, Boolean> predicate) {
+  public void bindBoolean(String name, SerializablePredicate<T> predicate) {
     if (predicate != null) {
       requireTagOpen();
-      template.append(" ?%s=${item.%s[%s]}".formatted(name, property, register(predicate)));
+      template.append(" ?%s=${item.%s[%s]}".formatted(name, property, register(predicate::test)));
     }
   }
 
@@ -304,7 +304,7 @@ final class LitRendererBuilder<T> {
    * @param liftedNames attribute/property names (with optional {@code .} or {@code ?} prefix) to
    *        bind directly instead of through the maps
    */
-  public <C extends HasElement> void bindAllAttributesAndProperties(
+  public <C extends HasElement> void spreadAllAttributesAndProperties(
       ValueProvider<T, C> componentProvider, String... liftedNames) {
     if (componentProvider instanceof Constant) {
       C component = componentProvider.apply(null);
@@ -317,7 +317,7 @@ final class LitRendererBuilder<T> {
     if (liftedNames.length > 0) {
       bindAttributes(componentProvider, liftedNames);
     }
-    bindObject(".attr", item -> {
+    int attrIdx = register(item -> {
       C component = componentProvider.apply(item);
       if (component == null) {
         return null;
@@ -328,7 +328,7 @@ final class LitRendererBuilder<T> {
           .forEach(name -> map.put(name, el.getAttribute(name)));
       return map.isEmpty() ? null : map;
     });
-    bindObject(".prop", item -> {
+    int propIdx = register(item -> {
       C component = componentProvider.apply(item);
       if (component == null) {
         return null;
@@ -339,6 +339,8 @@ final class LitRendererBuilder<T> {
           .forEach(name -> map.put(name, el.getProperty(name)));
       return map.isEmpty() ? null : map;
     });
+    requireTagOpen();
+    template.append(" .attr=${item.%s[%d]} .prop=${item.%s[%d]}".formatted(property, attrIdx, property, propIdx));
   }
 
   /**

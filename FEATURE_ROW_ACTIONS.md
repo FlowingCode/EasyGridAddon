@@ -7,8 +7,23 @@ Row actions are buttons or menu items displayed in a dedicated actions column, c
 ### `EasyGrid<T>` methods
 
 ```java
-// Add an action button (label + icon)
-EasyRowAction<T> addRowAction(String label, VaadinIcon icon, SerializableConsumer<T> handler);
+// Label only
+EasyRowAction<T> addRowAction(String label, SerializableConsumer<T> handler);
+
+// Label + static icon (Icon instance or VaadinIcon via IconFactory)
+EasyRowAction<T> addRowAction(String label, Icon icon, SerializableConsumer<T> handler);
+EasyRowAction<T> addRowAction(String label, IconFactory iconFactory, SerializableConsumer<T> handler);
+
+// Icon only (no label)
+EasyRowAction<T> addRowAction(Icon icon, SerializableConsumer<T> handler);
+EasyRowAction<T> addRowAction(IconFactory iconFactory, SerializableConsumer<T> handler);
+
+// Per-row dynamic icon via ValueProvider
+<ICON extends AbstractIcon<ICON>>
+EasyRowAction<T> addRowAction(ValueProvider<T, ICON> iconProvider, SerializableConsumer<T> handler);
+
+<ICON extends AbstractIcon<ICON>>
+EasyRowAction<T> addRowAction(String label, ValueProvider<T, ICON> iconProvider, SerializableConsumer<T> handler);
 
 // Render all actions as a context menu (overflow menu) instead of inline buttons
 void setRowActionsAsMenu(boolean asMenu);
@@ -40,7 +55,7 @@ public class EasyRowAction<T> {
 ## Usage
 
 ```java
-// Inline action buttons
+// Label + VaadinIcon (VaadinIcon implements IconFactory)
 easyGrid.addRowAction("Edit", VaadinIcon.EDIT, person -> {
     editPerson(person);
 });
@@ -49,6 +64,15 @@ easyGrid.addRowAction("Delete", VaadinIcon.TRASH, person -> {
     personService.delete(person);
     easyGrid.getDataProvider().refreshAll();
 }).withConfirmation("Are you sure you want to delete this person?");
+
+// Label only
+easyGrid.addRowAction("Details", person -> showDetails(person));
+
+// Per-row dynamic icon
+easyGrid.addRowAction(
+    person -> person.isActive() ? VaadinIcon.CHECK.create() : VaadinIcon.CLOSE.create(),
+    person -> toggleActive(person)
+);
 
 // Actions as a context menu (overflow menu) instead of inline buttons
 easyGrid.setRowActionsAsMenu(true);

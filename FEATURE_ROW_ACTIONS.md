@@ -25,6 +25,9 @@ EasyRowAction<T> addRowAction(ValueProvider<T, ICON> iconProvider, SerializableC
 <ICON extends AbstractIcon<ICON>>
 EasyRowAction<T> addRowAction(String label, ValueProvider<T, ICON> iconProvider, SerializableConsumer<T> handler);
 
+// Remove a previously added action button
+void removeRowAction(EasyRowAction<T> action);
+
 // Render all actions as a context menu (overflow menu) instead of inline buttons
 void setRowActionsAsMenu(boolean asMenu);
 
@@ -49,6 +52,9 @@ public class EasyRowAction<T> {
     // Confirmation dialog before executing the action
     EasyRowAction<T> withConfirmation(String message);
     EasyRowAction<T> withConfirmation(String title, String message);
+
+    // Remove this action from the grid
+    void remove();
 }
 ```
 
@@ -85,6 +91,13 @@ easyGrid.addRowAction("Activate", VaadinIcon.CHECK, person -> {
 easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
     personService.deactivate(person);
 }).visibleWhen(person -> person.isActive());
+
+// Removing an action
+EasyRowAction<T> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
+// later:
+easyGrid.removeRowAction(adminAction);
+// or equivalently, if only the action reference is in scope:
+adminAction.remove();
 
 // Configure the actions column via the underlying Grid.Column
 easyGrid.getActionsColumn()

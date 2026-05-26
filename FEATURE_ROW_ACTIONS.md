@@ -10,9 +10,6 @@ Row actions are buttons or menu items displayed in a dedicated actions column, c
 // Add an action button (label + icon)
 EasyRowAction<T> addRowAction(String label, VaadinIcon icon, SerializableConsumer<T> handler);
 
-// Add an action button with a theme variant
-EasyRowAction<T> addRowAction(String label, VaadinIcon icon, ButtonVariant variant, SerializableConsumer<T> handler);
-
 // Render all actions as a context menu (overflow menu) instead of inline buttons
 void setRowActionsAsMenu(boolean asMenu);
 
@@ -48,7 +45,7 @@ easyGrid.addRowAction("Edit", VaadinIcon.EDIT, person -> {
     editPerson(person);
 });
 
-easyGrid.addRowAction("Delete", VaadinIcon.TRASH, ButtonVariant.LUMO_ERROR, person -> {
+easyGrid.addRowAction("Delete", VaadinIcon.TRASH, person -> {
     personService.delete(person);
     easyGrid.getDataProvider().refreshAll();
 }).withConfirmation("Are you sure you want to delete this person?");

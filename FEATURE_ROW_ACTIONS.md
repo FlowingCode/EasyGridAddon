@@ -25,14 +25,14 @@ Grid.Column<T> getActionsColumn();
 ```java
 public class EasyRowAction<T> {
     // Conditional visibility
-    EasyRowAction<T> withVisibleWhen(SerializablePredicate<T> predicate);
+    EasyRowAction<T> visibleWhen(SerializablePredicate<T> predicate);
 
     // Conditional enablement
-    EasyRowAction<T> withEnabledWhen(SerializablePredicate<T> predicate);
+    EasyRowAction<T> enabledWhen(SerializablePredicate<T> predicate);
 
     // Tooltip
-    EasyRowAction<T> withTooltip(String tooltip);
-    EasyRowAction<T> withTooltip(SerializableFunction<T, String> tooltipProvider);
+    EasyRowAction<T> tooltip(String tooltip);
+    EasyRowAction<T> tooltip(SerializableFunction<T, String> tooltipProvider);
 
     // Confirmation dialog before executing the action
     EasyRowAction<T> withConfirmation(String message);
@@ -59,11 +59,11 @@ easyGrid.setRowActionsAsMenu(true);
 // Conditional visibility
 easyGrid.addRowAction("Activate", VaadinIcon.CHECK, person -> {
     personService.activate(person);
-}).withVisibleWhen(person -> !person.isActive());
+}).visibleWhen(person -> !person.isActive());
 
 easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
     personService.deactivate(person);
-}).withVisibleWhen(person -> person.isActive());
+}).visibleWhen(person -> person.isActive());
 
 // Configure the actions column via the underlying Grid.Column
 easyGrid.getActionsColumn()

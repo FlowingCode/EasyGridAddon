@@ -44,7 +44,7 @@ public class EasyRowAction<T> {
 
     // Tooltip
     EasyRowAction<T> tooltip(String tooltip);
-    EasyRowAction<T> tooltip(SerializableFunction<T, String> tooltipProvider);
+    EasyRowAction<T> tooltip(ValueProvider<T, String> tooltipProvider);
 
     // Confirmation dialog before executing the action
     EasyRowAction<T> withConfirmation(String message);

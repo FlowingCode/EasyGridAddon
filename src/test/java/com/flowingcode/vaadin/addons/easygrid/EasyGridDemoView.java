@@ -42,6 +42,9 @@ public class EasyGridDemoView extends TabbedDemo {
     addDemo(ConfigurationHierarchyDemo.class);
     addDemo(TypedColumnDemo.class);
     addDemo(DynamicButtonsDemo.class);
+    addDemo(RowActionsDemo.class);
+    addDemo(RowActionsMenuDemo.class);
+    addDemo(RowActionsDynamicDemo.class);
     setSizeFull();
   }
 }

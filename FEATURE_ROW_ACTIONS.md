@@ -161,7 +161,7 @@ easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
 }).visibleWhen(person -> person.isActive());
 
 // Removing an action
-EasyRowAction<T> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
+EasyRowAction<Person> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
 // later:
 easyGrid.removeRowAction(adminAction);
 // or equivalently, if only the action reference is in scope:

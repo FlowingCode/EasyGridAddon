@@ -122,7 +122,7 @@ Intercepts button clicks and presents a confirmation dialog before invoking the 
 ```java
 void remove();
 ```
-Removes this action from the actions column. Equivalent to calling `easyGrid.removeRowAction(this)`.
+Removes this action from the actions column and triggers an immediate re-render so the change is visible without waiting for a data refresh. Equivalent to calling `easyGrid.removeRowAction(this)`. If the action has already been removed, this call is a no-op. After removal the `EasyRowAction` reference is considered dead and cannot be re-added; call `addRowAction` again to create a new action.
 
 ---
 

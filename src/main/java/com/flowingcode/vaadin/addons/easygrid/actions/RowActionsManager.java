@@ -33,8 +33,8 @@ import lombok.NonNull;
 
 /**
  * Manages the row actions column for an {@code EasyGrid}. Maintains the list of registered
- * {@link EasyRowAction} instances, the render mode (inline buttons vs. overflow menu), and the
- * underlying {@link Grid.Column} that hosts the actions.
+ * {@link EasyRowAction} instances, the render mode (inline buttons vs. overflow menu), and
+ * delegates all visual concerns to a {@link RowActionsRenderer}.
  *
  * <p>An instance of this class is created lazily the first time a row action is added via
  * {@code EasyGrid.addRowAction(...)}.
@@ -46,8 +46,8 @@ public class RowActionsManager<T> implements Serializable {
 
   private final Grid<T> grid;
   private final List<EasyRowAction<T>> actions = new ArrayList<>();
-  private boolean asMenu = false;
-  private Grid.Column<T> actionsColumn;
+  private RowActionsRenderer<T> renderer;
+  private boolean rendererInitialized = false;
   private Registration rendererRegistration;
 
   private void setRendererRegistration(Registration registration) {
@@ -59,51 +59,47 @@ public class RowActionsManager<T> implements Serializable {
 
   public RowActionsManager(@NonNull Grid<T> grid) {
     this.grid = grid;
+    this.renderer = new LitRowActionsRenderer<>(grid);
   }
 
-  public <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
+  <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
       ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
     EasyRowAction<T> action = new EasyRowAction<T>(labelProvider, iconProvider, handler);
     actions.add(action);
     action.setManager(this);
-    setColumnCount(actions.size());
-    if (actions.size() == 1 && actionsColumn != null && !actionsColumn.isVisible()) {
-      actionsColumn.setVisible(true);
+    var column = renderer.getColumn();
+    if (column != null && actions.size() == 1 && !column.isVisible()) {
+      column.setVisible(true);
     }
     scheduleRendererUpdate();
     return action;
   }
 
   /**
-   * Removes the specified action from the actions column. If the action is not currently
-   * registered, this call is a no-op. The renderer is rebuilt on the next
-   * {@code beforeClientResponse} cycle; if no actions remain the column is hidden.
+   * Removes the specified action. If the action is not currently registered, this call is a no-op.
+   * The renderer is rebuilt on the next {@code beforeClientResponse} cycle; if no actions remain
+   * and the active renderer uses a column, that column is hidden.
    *
    * @param action the action to remove
    */
-  public void removeRowAction(EasyRowAction<T> action) {
+  void removeRowAction(EasyRowAction<T> action) {
     if (!actions.remove(action)) {
       return;
     }
-    setColumnCount(actions.size());
-    if (actions.isEmpty() && actionsColumn != null) {
-      actionsColumn.setVisible(false);
+    var column = renderer.getColumn();
+    if (column != null && actions.isEmpty()) {
+      column.setVisible(false);
     }
     scheduleRendererUpdate();
-  }
-
-  private void setColumnCount(int count) {
-    grid.getElement().getStyle().set("--grid-buttons-count", Integer.toString(count));
   }
 
   private void scheduleRendererUpdate() {
     grid.getUI().ifPresentOrElse(
         ui -> setRendererRegistration(ui.beforeClientResponse(grid, ctx -> updateRenderer())),
-        () -> setRendererRegistration(grid.addAttachListener(e ->
-            setRendererRegistration(e.getUI().beforeClientResponse(grid, ctx -> updateRenderer()))
-        )));
+        () -> setRendererRegistration(grid.addAttachListener(e -> setRendererRegistration(
+            e.getUI().beforeClientResponse(grid, ctx -> updateRenderer())))));
   }
 
   /**
@@ -112,8 +108,24 @@ public class RowActionsManager<T> implements Serializable {
    *
    * @param asMenu {@code true} to render actions as a menu; {@code false} for inline buttons
    */
-  public void setRowActionsAsMenu(boolean asMenu) {
-    this.asMenu = asMenu;
+  void setRowActionsAsMenu(boolean asMenu) {
+    if (asMenu != (renderer instanceof ContextMenuRowActionsRenderer)) {
+      setRenderer(asMenu ? new ContextMenuRowActionsRenderer<>(grid) : new LitRowActionsRenderer<>(grid));
+    }
+  }
+
+  /**
+   * Replaces the active renderer. The current renderer is cleaned up via {@link
+   * RowActionsRenderer#remove()} before the new one is installed. A renderer rebuild is scheduled
+   * for the next {@code beforeClientResponse} cycle.
+   *
+   * @param renderer the new renderer to use
+   */
+  public void setRenderer(@NonNull RowActionsRenderer<T> renderer) {
+    this.renderer.remove();
+    rendererInitialized = false;
+    this.renderer = renderer;
+    scheduleRendererUpdate();
   }
 
   /**
@@ -122,7 +134,7 @@ public class RowActionsManager<T> implements Serializable {
    * {@code enabledWhen}, {@code tooltip}) to make the change visible. Any previously scheduled
    * rebuild is cancelled and replaced.
    */
-  public void refresh() {
+  void refresh() {
     scheduleRendererUpdate();
   }
 
@@ -131,45 +143,36 @@ public class RowActionsManager<T> implements Serializable {
    *
    * @return the list of action entries
    */
-  public List<EasyRowAction<T>> getRowActions() {
+  List<EasyRowAction<T>> getRowActions() {
     return Collections.unmodifiableList(actions);
   }
 
   private void updateRenderer() {
     setRendererRegistration(null);
-
-    var renderer = new LitRendererBuilder<T>("actions");
-    renderer.append("<fc-dynamic-buttons>");
-    actions.forEach(action -> action.updateRenderer(renderer));
-    renderer.append("</fc-dynamic-buttons>");
-
-    if (actionsColumn == null) {
-      actionsColumn = grid.addColumn(renderer.build());
-      actionsColumn.setAutoWidth(true);
-    } else {
-      actionsColumn.setRenderer(renderer.build());
-    }
+    renderer.update(actions);
+    rendererInitialized = true;
   }
 
   /**
-   * Returns the {@link Grid.Column} that hosts the actions, creating it if it has not been added
-   * yet. The column is created hidden when no actions have been registered; it becomes visible
-   * automatically when the first action is added via {@link #addRowAction}.
+   * Returns the {@link Grid.Column} that hosts the actions, or {@code null} if the active renderer
+   * does not use a column (e.g. a context-menu renderer).
    *
-   * <p>If a deferred renderer update is pending, it is cancelled and applied immediately so the
-   * column reflects the current action list.
-   *
-   * @return the actions column
+   * <p>For column-based renderers: the column is created on demand if it does not exist yet, hidden
+   * when no actions are registered, and made visible automatically when the first action is added.
+   * If a deferred renderer update is pending it is cancelled and applied immediately so the column
+   * reflects the current action list.
    */
-  public Grid.Column<T> getActionsColumn() {
-    if (actionsColumn == null) {
+  Grid.Column<T> getActionsColumn() {
+    if (!rendererInitialized) {
       updateRenderer();
       if (actions.isEmpty()) {
-        actionsColumn.setVisible(false);
+        var column = renderer.getColumn();
+        if (column != null) {
+          column.setVisible(false);
+        }
       }
     }
-    return actionsColumn;
+    return renderer.getColumn();
   }
-
 
 }

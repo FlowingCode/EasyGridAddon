@@ -174,12 +174,52 @@ public final class EasyRowAction<T>
     this.manager = manager;
   }
 
+  boolean isVisible(T item) {
+    return visibleWhen == null || visibleWhen.test(item);
+  }
+
+  boolean isEnabled(T item) {
+    return enabledWhen == null || enabledWhen.test(item);
+  }
+
+  String getLabel(T item) {
+    return labelProvider != null ? labelProvider.apply(item) : null;
+  }
+
+  AbstractIcon<?> getIcon(T item) {
+    return iconProvider != null ? iconProvider.apply(item) : null;
+  }
+
+  void execute(T item) {
+    // Server-side guard: reject the click if the item no longer satisfies enabledWhen.
+    // The client-side ?disabled binding prevents most clicks, but this closes the gap
+    // for race conditions and devtools manipulation.
+    if (enabledWhen != null && !enabledWhen.test(item)) {
+      return;
+    }
+    if (confirmDialogSupplier != null) {
+      // Prevent multiple dialogs from stacking on rapid clicks.
+      if (confirmPending) {
+        return;
+      }
+      confirmPending = true;
+      ConfirmDialog dialog = confirmDialogSupplier.get();
+      dialog.addConfirmListener(e -> actionHandler.accept(item));
+      // Reset on any close path: confirm, cancel, or programmatic dialog.close()
+      dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
+          .setFilter("event.detail.value === false");
+      dialog.open();
+    } else {
+      actionHandler.accept(item);
+    }
+  }
+
   void updateRenderer(LitRendererBuilder<T> renderer) {
 
     // Wrap the entire button in a visibility guard; renders nothing when visibleWhen returns false
     renderer.withCondition(visibleWhen, () -> {
       // Register a server-side function; returns its index so the click event can reference it
-      int fn = renderer.withFunction((item, args) -> handleClick(item));
+      int fn = renderer.withFunction((item, args) -> execute(item));
       // Open the <vaadin-button> element that represents this action in the row
       renderer.tag("vaadin-button", () -> {
         if (enabledWhen != null) {
@@ -209,30 +249,6 @@ public final class EasyRowAction<T>
         renderer.addContent(labelProvider);
       });
     });
-  }
-
-  private void handleClick(T item) {
-    // Server-side guard: reject the click if the item no longer satisfies enabledWhen.
-    // The client-side ?disabled binding prevents most clicks, but this closes the gap
-    // for race conditions and devtools manipulation.
-    if (enabledWhen != null && !enabledWhen.test(item)) {
-      return;
-    }
-    if (confirmDialogSupplier != null) {
-      // Prevent multiple dialogs from stacking on rapid clicks.
-      if (confirmPending) {
-        return;
-      }
-      confirmPending = true;
-      ConfirmDialog dialog = confirmDialogSupplier.get();
-      dialog.addConfirmListener(e -> actionHandler.accept(item));
-      // Reset on any close path: confirm, cancel, or programmatic dialog.close()
-      dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
-          .setFilter("event.detail.value === false");
-      dialog.open();
-    } else {
-      actionHandler.accept(item);
-    }
   }
 
   /**

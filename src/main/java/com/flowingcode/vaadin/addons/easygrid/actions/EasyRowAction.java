@@ -47,6 +47,8 @@ import lombok.NonNull;
 public final class EasyRowAction<T>
     implements Serializable, HasStyle, HasThemeVariant<ButtonVariant> {
 
+  private RowActionsManager<T> manager;
+
   private final ValueProvider<T, String> labelProvider;
   private final ValueProvider<T, AbstractIcon<?>> iconProvider;
   private final SerializableConsumer<T> actionHandler;
@@ -58,24 +60,31 @@ public final class EasyRowAction<T>
   private final Element element = new Element("easy-row-action");
 
   @SuppressWarnings("unchecked")
-  <ICON extends AbstractIcon<ICON>> EasyRowAction(ValueProvider<T, String> labelProvider,
+  <ICON extends AbstractIcon<ICON>> EasyRowAction(RowActionsManager<T> manager,
+      ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> actionHandler) {
     if (labelProvider == null && iconProvider == null) {
       throw new IllegalArgumentException("At least one of label or icon must be non-null");
     }
+    this.manager = manager;
     this.labelProvider = labelProvider;
     this.iconProvider = (ValueProvider<T, AbstractIcon<?>>) iconProvider;
     this.actionHandler = actionHandler;
   }
   
-  private RowActionsManager<T> manager;
 
   private SerializablePredicate<T> visibleWhen;
   private SerializablePredicate<T> enabledWhen;
   private ValueProvider<T, String> tooltipProvider;
   private SerializableSupplier<ConfirmDialog> confirmDialogSupplier;
   private transient boolean confirmPending;
+
+  private void refresh() {
+    if (manager != null) {
+      manager.refresh();
+    }
+  }
 
   /**
    * Sets a predicate that controls whether this action is visible for a given row item.
@@ -86,6 +95,7 @@ public final class EasyRowAction<T>
    */
   public EasyRowAction<T> visibleWhen(SerializablePredicate<T> predicate) {
     this.visibleWhen = predicate;
+    refresh();
     return this;
   }
 
@@ -166,12 +176,10 @@ public final class EasyRowAction<T>
    */
   public void remove() {
     if (manager != null) {
+      var manager = this.manager;
+      this.manager = null;
       manager.removeRowAction(this);
     }
-  }
-
-  void setManager(RowActionsManager<T> manager) {
-    this.manager = manager;
   }
 
   boolean isVisible(T item) {
@@ -262,7 +270,7 @@ public final class EasyRowAction<T>
     if (iconProvider != null && labelProvider == null) {
       theme = theme == null || theme.isEmpty() ? "icon" : theme + " icon";
     }
-    return theme;
+    return theme == null || theme.isEmpty() ? null : theme;
   }
 
 }

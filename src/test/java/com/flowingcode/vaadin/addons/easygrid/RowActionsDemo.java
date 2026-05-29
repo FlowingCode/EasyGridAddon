@@ -39,6 +39,7 @@ public class RowActionsDemo extends Div {
 
   public RowActionsDemo() {
     var grid = new EasyGrid<>(Person.class);
+    grid.hideColumns("phoneNumber", "appointmentDateTime", "appointmentTime", "subscriber");
     grid.setItems(service.fetchAll());
 
     // Always visible; static tooltip

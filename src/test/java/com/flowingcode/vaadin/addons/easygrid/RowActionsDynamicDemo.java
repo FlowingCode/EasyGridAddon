@@ -42,6 +42,7 @@ public class RowActionsDynamicDemo extends Div {
 
   public RowActionsDynamicDemo() {
     var grid = new EasyGrid<>(Person.class);
+    grid.hideColumns("phoneNumber", "appointmentDateTime", "appointmentTime", "subscriber");
     grid.setItems(service.fetchAll());
 
     var editAction = grid.addRowAction("Edit", VaadinIcon.EDIT.create(), person ->
@@ -56,7 +57,6 @@ public class RowActionsDynamicDemo extends Div {
     var restrictCheckbox = new Checkbox("Show edit only for active persons");
     restrictCheckbox.addValueChangeListener(e -> {
       editAction.visibleWhen(e.getValue() ? Person::isActive : null);
-      grid.refreshRowActions();
     });
 
     // Removes the delete action from the grid entirely at runtime.

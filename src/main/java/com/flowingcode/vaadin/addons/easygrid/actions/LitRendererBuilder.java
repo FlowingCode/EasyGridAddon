@@ -19,11 +19,11 @@ import lombok.NonNull;
 final class LitRendererBuilder<T> {
 
   private final String property;
-
   private final StringBuilder template = new StringBuilder();
   private final List<SerializableBiConsumer<T, JsonArray>> functionHandlers = new ArrayList<>();
   private final List<ValueProvider<T, ?>> properties = new ArrayList<>();
   private boolean tagOpen = false;
+  private boolean closed = false;
 
   public LitRendererBuilder(@NonNull String property) {
     if (!property.matches("[A-Za-z][A-Za-z0-9]*")) {
@@ -38,13 +38,32 @@ final class LitRendererBuilder<T> {
     return property + "Handler" + index;
   }
 
-  /** Package-private accessor for tests; returns the accumulated template source. */
+  private void close() {
+    if (!closed) {
+      if (!properties.isEmpty()) {
+        template.insert(0, "${item.%s ? html`".formatted(property));
+        template.append("` : undefined}");
+      }
+      closed = true;
+    }
+  }
+
+  private void requireNotClosed() {
+    if (closed) {
+      throw new IllegalStateException("Builder has already been closed");
+    }
+  }
+
+  /** For testing only. */
   String getTemplate() {
+    close();
     return template.toString();
   }
 
   /** Finalizes the template and builds the {@link LitRenderer}. */
   public LitRenderer<T> build() {
+    close();
+
     LitRenderer<T> renderer = LitRenderer.of(template.toString());
     if (!properties.isEmpty()) {
       int n = properties.size();
@@ -79,6 +98,7 @@ final class LitRendererBuilder<T> {
    * Tags nest to arbitrary depth.
    */
   public void tag(String name, Runnable body) {
+    requireNotClosed();
     if (name == null || !name.matches("[a-zA-Z][a-zA-Z0-9-]*")) {
       throw new IllegalArgumentException("Invalid tag name: " + name);
     }
@@ -96,6 +116,7 @@ final class LitRendererBuilder<T> {
    * {@code body} is invoked directly with no surrounding conditional.
    */
   public void withCondition(SerializablePredicate<T> predicate, Runnable body) {
+    requireNotClosed();
     if (predicate == null) {
       body.run();
       return;
@@ -109,6 +130,7 @@ final class LitRendererBuilder<T> {
 
   /** Appends raw template content. Closes any pending opening tag first. */
   public void append(String s) {
+    requireNotClosed();
     finishOpeningTag();
     template.append(s);
   }
@@ -118,6 +140,7 @@ final class LitRendererBuilder<T> {
    * value is inlined at build time with prefix-aware dispatch.
    */
   public void set(String name, String value) {
+    requireNotClosed();
     bind(name, Constant.ofNullable(value));
   }
 
@@ -126,6 +149,7 @@ final class LitRendererBuilder<T> {
    * build time; {@code null} is a no-op.
    */
   public void bind(String name, ValueProvider<T, String> value) {
+    requireNotClosed();
     if (value == null) {
       return;
     }
@@ -143,6 +167,7 @@ final class LitRendererBuilder<T> {
    * needed.
    */
   public void addContent(ValueProvider<T, String> value) {
+    requireNotClosed();
     if (value == null) {
       return;
     }
@@ -166,6 +191,7 @@ final class LitRendererBuilder<T> {
    * no-op.
    */
   public void bindObject(String name, ValueProvider<T, ?> value) {
+    requireNotClosed();
     if (value == null) {
       return;
     }
@@ -207,6 +233,7 @@ final class LitRendererBuilder<T> {
    * must reference a function previously registered via {@link #withFunction}.
    */
   public void event(String eventName, int functionIndex) {
+    requireNotClosed();
     requireTagOpen();
     template.append(" @%s=${%s}".formatted(eventName, getFunctionName(functionIndex)));
   }
@@ -216,6 +243,7 @@ final class LitRendererBuilder<T> {
    * no-op.
    */
   public void bindBoolean(String name, SerializablePredicate<T> predicate) {
+    requireNotClosed();
     if (predicate != null) {
       requireTagOpen();
       template.append(" ?%s=${item.%s[%s]}".formatted(name, property, register(predicate::test)));
@@ -230,6 +258,7 @@ final class LitRendererBuilder<T> {
    * boolean binding) follows {@link #set(String, String)}'s dispatch rules.
    */
   public void copyAttributes(HasElement component, String... names) {
+    requireNotClosed();
     Element element = component.getElement();
     for (String name : names) {
       String value = switch (BindingType.of(name)) {
@@ -247,6 +276,7 @@ final class LitRendererBuilder<T> {
    * copies everything.
    */
   public void copyAllAtttributesAndPropertiesExcept(HasElement component, String... names) {
+    requireNotClosed();
     Element element = component.getElement();
 
     element.getAttributeNames().filter(excludingAttribute(names)).forEach(name->{
@@ -280,6 +310,7 @@ final class LitRendererBuilder<T> {
    */
   public <C extends HasElement> void bindAttributes(ValueProvider<T, C> componentProvider,
       String... names) {
+    requireNotClosed();
     if (names.length == 0) {
       throw new IllegalArgumentException("at least one attribute name is required");
     }
@@ -315,6 +346,7 @@ final class LitRendererBuilder<T> {
    */
   public <C extends HasElement> void spreadAllAttributesAndProperties(
       ValueProvider<T, C> componentProvider, String... liftedNames) {
+    requireNotClosed();
     requireTagOpen();
 
     if (componentProvider instanceof Constant) {
@@ -378,6 +410,7 @@ final class LitRendererBuilder<T> {
    * @return the index of the registered function
    */
   public int withFunction(SerializableBiConsumer<T, JsonArray> handler) {
+    requireNotClosed();
     functionHandlers.add(handler);
     return functionHandlers.size() - 1;
   }

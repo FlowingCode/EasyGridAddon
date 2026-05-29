@@ -38,6 +38,7 @@ public class RowActionsMenuDemo extends Div {
 
   public RowActionsMenuDemo() {
     var grid = new EasyGrid<>(Person.class);
+    grid.hideColumns("phoneNumber", "appointmentDateTime", "appointmentTime", "subscriber");
     grid.setItems(service.fetchAll());
 
     grid.addRowAction("Edit", VaadinIcon.EDIT.create(), person ->

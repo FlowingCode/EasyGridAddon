@@ -66,9 +66,8 @@ public class RowActionsManager<T> implements Serializable {
       ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
-    EasyRowAction<T> action = new EasyRowAction<T>(labelProvider, iconProvider, handler);
+    EasyRowAction<T> action = new EasyRowAction<T>(this, labelProvider, iconProvider, handler);
     actions.add(action);
-    action.setManager(this);
     var column = renderer.getColumn();
     if (column != null && actions.size() == 1 && !column.isVisible()) {
       column.setVisible(true);
@@ -93,6 +92,7 @@ public class RowActionsManager<T> implements Serializable {
       column.setVisible(false);
     }
     scheduleRendererUpdate();
+    action.remove();
   }
 
   private void scheduleRendererUpdate() {

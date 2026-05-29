@@ -22,6 +22,7 @@ package com.flowingcode.vaadin.addons.easygrid.actions;
 
 import com.vaadin.flow.component.grid.Grid;
 import java.util.List;
+import java.util.concurrent.ThreadLocalRandom;
 import lombok.NonNull;
 
 /**
@@ -44,18 +45,30 @@ final class LitRowActionsRenderer<T> implements RowActionsRenderer<T> {
     this.grid = grid;
   }
 
+  private static final int TAIL = Character.MAX_RADIX * Character.MAX_RADIX * Character.MAX_RADIX;
+
+  private static String getProperty() {
+    // Random property name ensures no collisions between consecutive renderer updates
+    int n = ThreadLocalRandom.current().nextInt(26 * 10 * TAIL);
+    char letter = (char) ('a' + n / (10 * TAIL));
+    char digit = (char) ('0' + (n / TAIL) % 10);
+    String tail = Integer.toString(TAIL + n % TAIL, Character.MAX_RADIX).substring(1);
+    return String.valueOf(letter) + digit + tail;
+  }
+
   @Override
   public void update(List<EasyRowAction<T>> actions) {
-    var builder = new LitRendererBuilder<T>("actions");
-    builder.append("<fc-dynamic-buttons>");
-    actions.forEach(action -> action.updateRenderer(builder));
-    builder.append("</fc-dynamic-buttons>");
+    var builder = new LitRendererBuilder<T>(getProperty());
+    builder.tag("fc-dynamic-buttons", () -> {
+      actions.forEach(action -> action.updateRenderer(builder));
+    });
     var litRenderer = builder.build();
     if (column == null) {
       column = grid.addColumn(litRenderer);
       column.setAutoWidth(true);
     } else {
       column.setRenderer(litRenderer);
+      grid.getGenericDataView().refreshAll();
     }
     grid.getElement().getStyle().set(GRID_BUTTONS_COUNT, Integer.toString(actions.size()));
   }

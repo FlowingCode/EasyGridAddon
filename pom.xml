@@ -12,7 +12,7 @@
     <url>https://www.flowingcode.com/en/open-source/</url>
 
     <properties>
-        <vaadin.version>24.9.1</vaadin.version>
+        <vaadin.version>24.10.6</vaadin.version>
         <selenium.version>4.10.0</selenium.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -70,11 +70,32 @@
             <artifactId>vaadin-core</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>com.flowingcode.vaadin</groupId>
-            <artifactId>json-migration-helper</artifactId>
-            <version>0.9.2</version>
-        </dependency>
+        
+      	<dependency>
+			<groupId>com.flowingcode.vaadin</groupId>
+			<artifactId>json-migration-helper</artifactId>
+			<version>0.9.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.flowingcode.vaadin.test</groupId>
+			<artifactId>testbench-rpc</artifactId>
+			<version>1.5.0</version>
+			<scope>test</scope>
+		</dependency>
+				
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-remote-driver</artifactId>
+      <version>4.44.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-java</artifactId>
+      <version>4.44.0</version>
+      <scope>compile</scope>
+    </dependency>
+    	    
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>

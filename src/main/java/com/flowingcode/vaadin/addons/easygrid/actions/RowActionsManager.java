@@ -20,6 +20,7 @@
 
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.AbstractIcon;
 import com.vaadin.flow.function.SerializableConsumer;
@@ -47,6 +48,7 @@ public class RowActionsManager<T> implements Serializable {
   private final Grid<T> grid;
   private final List<EasyRowAction<T>> actions = new ArrayList<>();
   private RowActionsRenderer<T> renderer;
+  private ButtonVariant[] defaultVariants = {ButtonVariant.LUMO_TERTIARY_INLINE};
   private boolean rendererInitialized = false;
   private Registration rendererRegistration;
 
@@ -57,6 +59,11 @@ public class RowActionsManager<T> implements Serializable {
     rendererRegistration = registration;
   }
 
+  /**
+   * Creates a new {@code RowActionsManager} for the given grid.
+   *
+   * @param grid the grid to manage row actions for
+   */
   public RowActionsManager(@NonNull Grid<T> grid) {
     this.grid = grid;
     this.renderer = new LitRowActionsRenderer<>(grid);
@@ -67,6 +74,9 @@ public class RowActionsManager<T> implements Serializable {
       ValueProvider<T, ICON> iconProvider,
       @NonNull SerializableConsumer<T> handler) {
     EasyRowAction<T> action = new EasyRowAction<T>(this, labelProvider, iconProvider, handler);
+    if (defaultVariants != null) {
+      action.addThemeVariants(defaultVariants);
+    }
     actions.add(action);
     var column = renderer.getColumn();
     if (column != null && actions.size() == 1 && !column.isVisible()) {
@@ -100,6 +110,15 @@ public class RowActionsManager<T> implements Serializable {
         ui -> setRendererRegistration(ui.beforeClientResponse(grid, ctx -> updateRenderer())),
         () -> setRendererRegistration(grid.addAttachListener(e -> setRendererRegistration(
             e.getUI().beforeClientResponse(grid, ctx -> updateRenderer())))));
+  }
+
+  /**
+   * Sets the theme variants that are applied to every action upon creation.
+   *
+   * @param variants the variants to apply
+   */
+  void setRowActionVariants(ButtonVariant... variants) {
+    this.defaultVariants = variants != null && variants.length > 0 ? variants : null;
   }
 
   /**

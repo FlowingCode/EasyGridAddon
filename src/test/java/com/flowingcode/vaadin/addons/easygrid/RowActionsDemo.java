@@ -45,8 +45,7 @@ public class RowActionsDemo extends Div {
     // Always visible; static tooltip
     grid.addRowAction("Edit", VaadinIcon.EDIT.create(), person ->
         Notification.show("Edit: " + person.getFirstName() + " " + person.getLastName()))
-        .tooltip("Edit person details")
-        .addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        .tooltip("Edit person details");
 
     // Always visible; enabled only when a phone number is set;
     // tooltip changes dynamically to show the number or explain the disabled state
@@ -55,8 +54,7 @@ public class RowActionsDemo extends Div {
         .enabledWhen(person -> person.getPhoneNumber() != null)
         .tooltip(person -> person.getPhoneNumber() != null
             ? "Call " + person.getPhoneNumber()
-            : "No phone number on record")
-        .addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            : "No phone number on record");
 
     // Visible only for active persons; requires confirmation before executing
     grid.addRowAction("Deactivate", VaadinIcon.CLOSE_CIRCLE.create(), person ->
@@ -64,20 +62,18 @@ public class RowActionsDemo extends Div {
         .visibleWhen(Person::isActive)
         .withConfirmation("Deactivate person",
             "Are you sure you want to deactivate this person?")
-        .addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ERROR);
+        .addThemeVariants(ButtonVariant.LUMO_ERROR);
 
     // Visible only for inactive persons
     grid.addRowAction("Activate", VaadinIcon.CHECK_CIRCLE.create(), person ->
         Notification.show("Activated: " + person.getFirstName() + " " + person.getLastName()))
-        .visibleWhen(person -> !person.isActive())
-        .addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+        .visibleWhen(person -> !person.isActive());
 
     // Per-row dynamic icon: filled star for subscribers, outline star for non-subscribers
     grid.addRowAction(
         person -> person.isSubscriber() ? VaadinIcon.STAR.create() : VaadinIcon.STAR_O.create(),
         person -> Notification.show(
-            (person.isSubscriber() ? "Unsubscribe" : "Subscribe") + ": " + person.getFirstName()))
-        .addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
+            (person.isSubscriber() ? "Unsubscribe" : "Subscribe") + ": " + person.getFirstName()));
 
     grid.getActionsColumn().setHeader("Actions");
     add(grid);

@@ -1,6 +1,7 @@
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dependency.JsModule;
 import com.vaadin.flow.component.dependency.Uses;
@@ -158,6 +159,16 @@ public interface HasRowActions<T> {
    */
   default Grid.Column<T> getActionsColumn() {
     return getRowActionsManager().getActionsColumn();
+  }
+
+  /**
+   * Sets the theme variants that will be applied upon creation to all row actions added after this
+   * call. Pass no arguments (or {@code null}) to clear the default variants.
+   *
+   * @param variants the variants to apply to each new action
+   */
+  default void setRowActionVariants(ButtonVariant... variants) {
+    getRowActionsManager().setRowActionVariants(variants);
   }
 
   /**

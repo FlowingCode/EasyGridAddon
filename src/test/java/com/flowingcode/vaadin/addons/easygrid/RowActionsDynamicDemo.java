@@ -47,11 +47,9 @@ public class RowActionsDynamicDemo extends Div {
 
     var editAction = grid.addRowAction("Edit", VaadinIcon.EDIT.create(), person ->
         Notification.show("Edit: " + person.getFirstName() + " " + person.getLastName()));
-    editAction.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE);
-
     var deleteAction = grid.addRowAction(VaadinIcon.TRASH, person ->
         Notification.show("Delete: " + person.getFirstName() + " " + person.getLastName()));
-    deleteAction.addThemeVariants(ButtonVariant.LUMO_TERTIARY_INLINE, ButtonVariant.LUMO_ERROR);
+    deleteAction.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
     // Changing visibleWhen after construction requires refreshRowActions() to take effect.
     var restrictCheckbox = new Checkbox("Show edit only for active persons");

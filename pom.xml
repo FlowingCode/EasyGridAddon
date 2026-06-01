@@ -74,7 +74,7 @@
       	<dependency>
 			<groupId>com.flowingcode.vaadin</groupId>
 			<artifactId>json-migration-helper</artifactId>
-			<version>0.9.2</version>
+			<version>0.9.3-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.flowingcode.vaadin.test</groupId>
@@ -92,6 +92,18 @@
     <dependency>
       <groupId>org.seleniumhq.selenium</groupId>
       <artifactId>selenium-java</artifactId>
+      <version>4.44.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-api</artifactId>
+      <version>4.44.0</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.seleniumhq.selenium</groupId>
+      <artifactId>selenium-http</artifactId>
       <version>4.44.0</version>
       <scope>compile</scope>
     </dependency>

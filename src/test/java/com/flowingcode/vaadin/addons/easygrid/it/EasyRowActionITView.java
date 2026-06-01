@@ -1,0 +1,115 @@
+package com.flowingcode.vaadin.addons.easygrid.it;
+
+import com.flowingcode.vaadin.addons.easygrid.EasyGrid;
+import com.flowingcode.vaadin.jsonmigration.InstrumentedRoute;
+import com.flowingcode.vaadin.jsonmigration.LegacyClientCallable;
+import com.flowingcode.vaadin.testbench.rpc.RmiRemote;
+import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.icon.IconFactory;
+import com.vaadin.flow.component.internal.AllowInert;
+import com.vaadin.flow.function.SerializableConsumer;
+import elemental.json.JsonObject;
+import elemental.json.JsonValue;
+import java.util.stream.IntStream;
+import lombok.Getter;
+import lombok.experimental.Delegate;
+
+@InstrumentedRoute(EasyRowActionITView.ROUTE)
+public class EasyRowActionITView extends Div implements EasyRowActionITCallables {
+
+  public static final String ROUTE = "it/EasyRowAction";
+  private EasyGrid<Integer> grid;
+
+  public static interface IState extends RmiRemote {
+    Integer getClickedValue();
+
+    Integer getClickedAction();
+
+    default SerializableConsumer<Integer> action(int action) {
+      return value -> {
+        ((State) this).clickedValue = value;
+        ((State) this).clickedAction = action;
+      };
+    }
+  }
+
+  @Getter
+  private static class State implements IState {
+    private Integer clickedValue;
+    private Integer clickedAction;
+  };
+
+  @Delegate
+  private State state = new State();
+
+  public EasyRowActionITView() {
+    grid = new EasyGrid<>(Integer.class, false);
+    grid.setItems(IntStream.rangeClosed(1, 10).boxed().toList());
+    grid.getWrappedGrid().addColumn(x -> x);
+    add(grid);
+  }
+
+  @Override
+  public SerializableConsumer<Integer> action(int action) {
+    return state.action(action);
+  }
+
+  @Override
+  @AllowInert
+  @LegacyClientCallable
+  public JsonValue $call(JsonObject invocation) {
+    return EasyRowActionITCallables.super.$call(invocation);
+  }
+
+  @Override
+  public RmiEasyRowAction<Integer> addRowAction(String label,
+      SerializableConsumer<Integer> handler) {
+    return RmiEasyRowAction.of(grid.addRowAction(label, handler));
+  }
+
+  @Override
+  public void setRowActionsAsMenu(boolean asMenu) {
+    grid.setRowActionsAsMenu(asMenu);
+  }
+
+  @Override
+  public void setRowActionVariants(ButtonVariant variant) {
+    grid.setRowActionVariants(variant);
+  }
+
+  @Override
+  public void refreshRowActions() {
+    grid.refreshRowActions();
+  }
+
+  @Override
+  public boolean isActionsColumnVisible() {
+    var column = grid.getActionsColumn();
+    return column != null && column.isVisible();
+  }
+
+  //
+  // RmiEasyRowAction<Integer> addRowAction(
+  // String label,
+  // Icon icon,
+  // SerializableConsumer<Integer> handler);
+  //
+  // RmiEasyRowAction<Integer> addRowAction(
+  // Icon icon,
+  // SerializableConsumer<Integer> handler);
+  //
+  // RmiEasyRowAction<Integer> addRowAction(
+  // String label,
+  // IconFactory iconFactory,
+  // SerializableConsumer<Integer> handler);
+  //
+  @Override
+  public RmiEasyRowAction<Integer> addRowAction(
+      IconFactory iconFactory,
+      SerializableConsumer<Integer> handler) {
+    var action = grid.addRowAction(iconFactory, handler);
+    return RmiEasyRowAction.of(action);
+  }
+
+}

@@ -35,7 +35,7 @@ import java.util.List;
  * @param <T> the grid bean type
  * @see LitRowActionsRenderer
  */
-interface RowActionsRenderer<T> extends Serializable {
+public interface RowActionsRenderer<T> extends Serializable {
 
   /**
    * Rebuilds the visual representation to reflect the given action list. Called on every scheduled

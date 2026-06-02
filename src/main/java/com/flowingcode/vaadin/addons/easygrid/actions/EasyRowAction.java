@@ -108,6 +108,7 @@ public final class EasyRowAction<T>
    */
   public EasyRowAction<T> enabledWhen(SerializablePredicate<T> predicate) {
     this.enabledWhen = predicate;
+    refresh();
     return this;
   }
 
@@ -119,6 +120,7 @@ public final class EasyRowAction<T>
    */
   public EasyRowAction<T> tooltip(String tooltip) {
     this.tooltipProvider = Constant.of(tooltip);
+    refresh();
     return this;
   }
 
@@ -130,6 +132,7 @@ public final class EasyRowAction<T>
    */
   public EasyRowAction<T> tooltip(ValueProvider<T, String> tooltipProvider) {
     this.tooltipProvider = tooltipProvider;
+    refresh();
     return this;
   }
 
@@ -165,6 +168,9 @@ public final class EasyRowAction<T>
       dialog.setCancelText(cancelText);
       return dialog;
     };
+    // Render-neutral (the dialog is built at click time), but refreshed so every fluent setter
+    // behaves uniformly. The scheduled rebuild is coalesced with any other pending update.
+    refresh();
     return this;
   }
 

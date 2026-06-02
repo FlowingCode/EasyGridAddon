@@ -179,13 +179,21 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
   @Test
   public void testRefreshRowActions() {
     var action = $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(1));
-    assertNull(grid.getCell(0, 1).$("vaadin-button").first().getAttribute("disabled"));
 
-    // enabledWhen change takes effect after refreshRowActions()
-    action.enabledWhen(x -> x % 2 == 0);
+    // baseline: the button carries only the default variant, not "error"
+    assertFalse(
+        grid.getCell(0, 1).$("vaadin-button").first().getAttribute("theme").contains("error"));
+
+    // An element-level change (a theme variant) is NOT applied automatically — unlike the fluent
+    // mutators (visibleWhen/enabledWhen/tooltip), which self-refresh.
+    action.addThemeVariants(ButtonVariant.LUMO_ERROR);
+    assertFalse(
+        grid.getCell(0, 1).$("vaadin-button").first().getAttribute("theme").contains("error"));
+
+    // It takes effect only after an explicit refreshRowActions().
     $server.refreshRowActions();
-
-    assertNotNull(grid.getCell(0, 1).$("vaadin-button").first().getAttribute("disabled"));
+    assertTrue(
+        grid.getCell(0, 1).$("vaadin-button").first().getAttribute("theme").contains("error"));
   }
 
   @Test
@@ -206,8 +214,8 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     assertTrue(theme2.contains("tertiary-inline"));
     assertTrue(theme2.contains("error"));
 
-    // setRowActionVariants overrides the default for subsequently added actions
-    $server.setRowActionVariants(ButtonVariant.LUMO_ERROR);
+    // setRowActionsVariants overrides the default for subsequently added actions
+    $server.setRowActionsVariants(ButtonVariant.LUMO_ERROR);
     $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(3));
     var theme3 = grid.getCell(0, 1).$("vaadin-button").get(2).getAttribute("theme");
     assertNotNull(theme3);

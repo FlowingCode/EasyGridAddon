@@ -19,10 +19,15 @@ import lombok.NonNull;
 public interface HasRowActions<T> {
 
   /**
-   * Returns the {@code RowActionsManager} that manages the actions column for this grid.
-   * Implementors must provide this instance; all default methods delegate to it.
+   * Returns the {@link RowActionsManager} that backs this grid's actions column. Every other method
+   * of this interface is a {@code default} method that delegates to it.
    *
    * @return the row actions manager, never {@code null}
+   * @apiNote This is a Service Provider Interface (SPI) method: it exists so that classes which
+   *          <em>implement</em> {@code HasRowActions} (such as {@code EasyGrid}) can supply the
+   *          backing manager. Application code should not call it directly — configure row actions
+   *          through the grid's own methods (e.g. {@code addRowAction(...)},
+   *          {@code setRowActionsAsMenu(...)}).
    */
   RowActionsManager<T> getRowActionsManager();
 
@@ -157,8 +162,8 @@ public interface HasRowActions<T> {
    *
    * @return the actions column, or {@code null} if the active renderer does not use a column
    */
-  default Grid.Column<T> getActionsColumn() {
-    return getRowActionsManager().getActionsColumn();
+  default Grid.Column<T> getRowActionsColumn() {
+    return getRowActionsManager().getRowActionsColumn();
   }
 
   /**
@@ -167,16 +172,17 @@ public interface HasRowActions<T> {
    *
    * @param variants the variants to apply to each new action
    */
-  default void setRowActionVariants(ButtonVariant... variants) {
-    getRowActionsManager().setRowActionVariants(variants);
+  default void setRowActionsVariants(ButtonVariant... variants) {
+    getRowActionsManager().setRowActionsVariants(variants);
   }
 
   /**
-   * Schedules a renderer rebuild on the next {@code beforeClientResponse} cycle. Call this after
-   * mutating the configuration of any registered {@link EasyRowAction} (e.g. via
-   * {@link EasyRowAction#visibleWhen}, {@link EasyRowAction#enabledWhen},
-   * {@link EasyRowAction#tooltip}) to have the change reflected in the grid. Any previously
-   * scheduled rebuild is cancelled and replaced.
+   * Schedules a renderer rebuild on the next {@code beforeClientResponse} cycle. The fluent
+   * configuration methods of {@link EasyRowAction} ({@code visibleWhen}, {@code enabledWhen},
+   * {@code tooltip}, {@code withConfirmation}) schedule this automatically, so an explicit call is
+   * only needed after changing an action's styling or theme variants (e.g. {@code addClassName},
+   * {@code getStyle()}, {@code addThemeVariants}), which are not applied automatically. Any
+   * previously scheduled rebuild is cancelled and replaced.
    */
   default void refreshRowActions() {
     getRowActionsManager().refresh();

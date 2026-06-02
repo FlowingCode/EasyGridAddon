@@ -37,8 +37,9 @@ import lombok.NonNull;
  * {@link EasyRowAction} instances, the render mode (inline buttons vs. overflow menu), and
  * delegates all visual concerns to a {@link RowActionsRenderer}.
  *
- * <p>An instance of this class is created lazily the first time a row action is added via
- * {@code EasyGrid.addRowAction(...)}.
+ * <p>A manager instance is created eagerly together with its grid. The instance itself is
+ * lightweight; the actions {@link Grid.Column} it manages is created lazily — on the first renderer
+ * update or {@link #getRowActionsColumn()} call — and stays hidden until the first action is added.
  *
  * @param <T> the grid bean type
  */
@@ -117,7 +118,7 @@ public class RowActionsManager<T> implements Serializable {
    *
    * @param variants the variants to apply
    */
-  void setRowActionVariants(ButtonVariant... variants) {
+  void setRowActionsVariants(ButtonVariant... variants) {
     this.defaultVariants = variants != null && variants.length > 0 ? variants : null;
   }
 
@@ -148,10 +149,10 @@ public class RowActionsManager<T> implements Serializable {
   }
 
   /**
-   * Schedules a renderer rebuild on the next {@code beforeClientResponse} cycle. Call this after
-   * mutating an existing {@link EasyRowAction}'s configuration (e.g. via {@code visibleWhen},
-   * {@code enabledWhen}, {@code tooltip}) to make the change visible. Any previously scheduled
-   * rebuild is cancelled and replaced.
+   * Schedules a renderer rebuild on the next {@code beforeClientResponse} cycle. The fluent
+   * configuration methods of {@link EasyRowAction} schedule this automatically; an explicit call is
+   * only needed after changing an action's styling or theme variants, which are not applied
+   * automatically. Any previously scheduled rebuild is cancelled and replaced.
    */
   void refresh() {
     scheduleRendererUpdate();
@@ -181,7 +182,7 @@ public class RowActionsManager<T> implements Serializable {
    * If a deferred renderer update is pending it is cancelled and applied immediately so the column
    * reflects the current action list.
    */
-  Grid.Column<T> getActionsColumn() {
+  Grid.Column<T> getRowActionsColumn() {
     if (!rendererInitialized) {
       updateRenderer();
       if (actions.isEmpty()) {

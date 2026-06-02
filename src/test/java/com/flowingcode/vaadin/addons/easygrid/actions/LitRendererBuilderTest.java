@@ -5,14 +5,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
-
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
 import elemental.json.JsonObject;
-import java.util.Map;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -31,6 +29,14 @@ public class LitRendererBuilderTest {
     ValueProvider<Pojo, ?> vp = renderer.getValueProviders().get("actions");
     assertNotNull("expected an 'actions' value provider", vp);
     return (JsonObject) vp.apply(row);
+  }
+
+  /**
+   * Wraps {@code inner} in the {@code item.actions} presence guard the builder emits whenever at
+   * least one per-row property is registered.
+   */
+  private static String guarded(String inner) {
+    return "${item.actions ? html`" + inner + "` : undefined}";
   }
 
   // --- structural emission ---
@@ -104,7 +110,7 @@ public class LitRendererBuilderTest {
   public void bindRegistersProviderAndEmitsReference() {
     LitRendererBuilder<Object> b = newBuilder();
     b.tag("x", () -> b.bind("foo", item -> "value"));
-    assertEquals("<x foo=${item.actions[0]}></x>", b.getTemplate());
+    assertEquals(guarded("<x foo=${item.actions[0]}></x>"), b.getTemplate());
   }
 
   @Test
@@ -125,14 +131,14 @@ public class LitRendererBuilderTest {
   public void bindBooleanRegistersAndEmits() {
     LitRendererBuilder<Object> b = newBuilder();
     b.tag("x", () -> b.bindBoolean("disabled", item -> true));
-    assertEquals("<x ?disabled=${item.actions[0]}></x>", b.getTemplate());
+    assertEquals(guarded("<x ?disabled=${item.actions[0]}></x>"), b.getTemplate());
   }
 
   @Test
   public void bindObjectRegistersAndEmits() {
     LitRendererBuilder<Object> b = newBuilder();
     b.tag("x", () -> b.bindObject(".descriptor", item -> java.util.Map.of("k", "v")));
-    assertEquals("<x .descriptor=${item.actions[0]}></x>", b.getTemplate());
+    assertEquals(guarded("<x .descriptor=${item.actions[0]}></x>"), b.getTemplate());
   }
 
   // --- withCondition ---
@@ -141,7 +147,7 @@ public class LitRendererBuilderTest {
   public void withConditionWrapsBody() {
     LitRendererBuilder<Object> b = newBuilder();
     b.withCondition(item -> true, () -> b.tag("x", () -> {}));
-    assertEquals("${item.actions[0] ? html`<x></x>` : undefined}", b.getTemplate());
+    assertEquals(guarded("${item.actions[0] ? html`<x></x>` : undefined}"), b.getTemplate());
   }
 
   @Test
@@ -164,7 +170,7 @@ public class LitRendererBuilderTest {
   public void addContentDynamic() {
     LitRendererBuilder<Object> b = newBuilder();
     b.tag("x", () -> b.addContent(item -> "label"));
-    assertEquals("<x>${item.actions[0]}</x>", b.getTemplate());
+    assertEquals(guarded("<x>${item.actions[0]}</x>"), b.getTemplate());
   }
 
   @Test
@@ -223,7 +229,7 @@ public class LitRendererBuilderTest {
     LitRendererBuilder<Object> b = newBuilder();
     HasElement holder = () -> new Element("test");
     b.tag("x", () -> b.bindAttributes(item -> holder, "foo", ".bar"));
-    assertEquals("<x foo=${item.actions[0]} .bar=${item.actions[1]}></x>", b.getTemplate());
+    assertEquals(guarded("<x foo=${item.actions[0]} .bar=${item.actions[1]}></x>"), b.getTemplate());
   }
 
   @Test
@@ -231,7 +237,7 @@ public class LitRendererBuilderTest {
     LitRendererBuilder<Object> b = newBuilder();
     HasElement holder = () -> new Element("test");
     b.tag("x", () -> b.bindAttributes(item -> holder, "?disabled"));
-    assertEquals("<x ?disabled=${item.actions[0]}></x>", b.getTemplate());
+    assertEquals(guarded("<x ?disabled=${item.actions[0]}></x>"), b.getTemplate());
   }
 
   // --- copyAttributes BOOLEAN branch ---
@@ -539,7 +545,7 @@ public class LitRendererBuilderTest {
     b.tag("x", () -> b.spreadAllAttributesAndProperties(
         item -> (HasElement) () -> new Element("test"), "icon"));
     assertEquals(
-        "<x .attr=${item.actions[0]} .prop=${item.actions[1]} icon=${item.actions[2]}></x>",
+        guarded("<x .attr=${item.actions[0]} .prop=${item.actions[1]} icon=${item.actions[2]}></x>"),
         b.getTemplate());
   }
 

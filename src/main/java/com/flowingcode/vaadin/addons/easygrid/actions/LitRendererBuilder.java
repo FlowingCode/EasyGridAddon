@@ -9,10 +9,9 @@ import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.ValueProvider;
 import elemental.json.Json;
 import elemental.json.JsonArray;
+import elemental.json.JsonObject;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Predicate;
 import lombok.NonNull;
 
@@ -378,10 +377,10 @@ final class LitRendererBuilder<T> {
         return null;
       }
       Element el = component.getElement();
-      Map<String, Object> map = new LinkedHashMap<>();
+      JsonObject obj = Json.createObject();
       el.getAttributeNames().filter(excludingAttribute(liftedNames))
-          .forEach(name -> map.put(name, el.getAttribute(name)));
-      return map.isEmpty() ? null : map;
+          .forEach(name -> obj.put(name, el.getAttribute(name)));
+      return obj.keys().length == 0 ? null : obj;
     });
 
     int propIdx = register(item -> {
@@ -390,10 +389,10 @@ final class LitRendererBuilder<T> {
         return null;
       }
       Element el = component.getElement();
-      Map<String, Object> map = new LinkedHashMap<>();
+      JsonObject obj = Json.createObject();
       el.getPropertyNames().filter(excludingProperty(liftedNames))
-          .forEach(name -> map.put(name, el.getProperty(name)));
-      return map.isEmpty() ? null : map;
+          .forEach(name -> obj.put(name, el.getProperty(name)));
+      return obj.keys().length == 0 ? null : obj;
     });
 
     template.append(" .attr=${item.%s[%d]} .prop=${item.%s[%d]}".formatted(property, attrIdx, property, propIdx));

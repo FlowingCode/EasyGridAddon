@@ -29,12 +29,6 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     grid = $(GridElement.class).waitForFirst();
   }
 
-  private void contextClick(com.vaadin.testbench.TestBenchElement element) {
-    executeScript(
-        "arguments[0].dispatchEvent(new MouseEvent('contextmenu', {bubbles: true, cancelable: true}))",
-        element);
-  }
-
   @Test
   public void testActionInvocation() {
     $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(1));
@@ -130,7 +124,7 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     assertTrue(grid.getCell(0, 0).$("vaadin-button").all().isEmpty());
 
     // right-click opens the context menu
-    contextClick(grid.getCell(0, 0));
+    grid.getCell(0, 0).contextClick();
     var overlay = $("vaadin-context-menu-overlay").waitForFirst();
 
     // one menu item for the registered action
@@ -149,13 +143,13 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
         .visibleWhen(x -> x % 2 == 0); // visible only for even items
 
     // Delete absent for odd row (row 0 = item 1); only Edit shown
-    contextClick(grid.getCell(0, 0));
+    grid.getCell(0, 0).contextClick();
     assertEquals(1, $("vaadin-context-menu-overlay").waitForFirst()
         .$("vaadin-context-menu-item").all().size());
     $("vaadin-context-menu-overlay").first().sendKeys(Keys.ESCAPE);
 
     // even row (row 1 = item 2): both items shown
-    contextClick(grid.getCell(1, 0));
+    grid.getCell(1, 0).contextClick();
     assertEquals(2, $("vaadin-context-menu-overlay").waitForFirst()
         .$("vaadin-context-menu-item").all().size());
   }
@@ -167,7 +161,7 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
         .enabledWhen(x -> x % 2 == 0); // enabled only for even items
 
     // menu item disabled for odd row (row 0 = item 1)
-    contextClick(grid.getCell(0, 0));
+    grid.getCell(0, 0).contextClick();
     var item = $("vaadin-context-menu-overlay").waitForFirst()
         .$("vaadin-context-menu-item").first();
     assertNotNull(item.getAttribute("disabled"));

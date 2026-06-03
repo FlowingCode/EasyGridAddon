@@ -62,6 +62,33 @@ Returns the `Grid.Column<T>` backing the actions column, allowing the caller to 
 
 ---
 
+#### Default theme variants
+
+```java
+void setDefaultRowActionVariants(ButtonVariant... variants);
+```
+Sets the Vaadin `ButtonVariant`s applied by default to every action button created *after* this call; actions added earlier are unaffected. The built-in default is `LUMO_TERTIARY_INLINE`. Pass no arguments (or `null`) to clear the defaults. Individual actions can still add their own variants via `EasyRowAction.addThemeVariants(...)`.
+
+---
+
+#### Custom renderer
+
+```java
+void setRowActionsRenderer(RowActionsRenderer<T> renderer);
+```
+Replaces the strategy that turns the registered actions into UI. The built-in inline-button and context-menu renderers (selected via `setRowActionsAsMenu`) cover the common cases; supply a custom `RowActionsRenderer<T>` to present actions another way. The previous renderer is cleaned up and a rebuild is scheduled. Note that a subsequent `setRowActionsAsMenu(...)` call installs a built-in renderer, replacing a custom one.
+
+---
+
+#### Refreshing after configuration changes
+
+```java
+void refreshRowActions();
+```
+Schedules a rebuild of the actions column on the next server response. The fluent `EasyRowAction` methods (`visibleWhen`, `enabledWhen`, `tooltip`, `withConfirmation`) already trigger this automatically, so an explicit call is only needed after changing an action's styling or theme variants (see below), which are not applied automatically.
+
+---
+
 ### `EasyRowAction<T>`
 
 All mutator methods return `this` to support method chaining.
@@ -105,6 +132,19 @@ EasyRowAction<T> withConfirmation(String message);
 EasyRowAction<T> withConfirmation(String title, String message);
 ```
 Intercepts button clicks and presents a confirmation dialog before invoking the action handler. The handler is only called if the user confirms. `message` is the confirmation prompt shown to the user; the optional `title` sets the dialog heading.
+
+---
+
+#### Styling and theme variants
+
+`EasyRowAction<T>` implements `HasStyle` and `HasThemeVariant<ButtonVariant>`, so the action's button can be styled and themed directly:
+
+```java
+action.addClassName("danger");
+action.getStyle().set("font-weight", "bold");
+action.addThemeVariants(ButtonVariant.LUMO_ERROR);
+```
+These are forwarded onto the rendered button. Unlike the fluent mutators above, style and theme-variant changes made after the grid has already rendered are **not** applied automatically — call `easyGrid.refreshRowActions()` afterwards to make them visible.
 
 ---
 
@@ -155,6 +195,13 @@ easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
 EasyRowAction<T> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
 // later:
 adminAction.remove();
+
+// Default theme variants applied to every action added afterwards
+easyGrid.setDefaultRowActionVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+
+// Style or theme an individual action's button
+easyGrid.addRowAction("Reset", person -> reset(person))
+    .addClassName("warning");
 
 // Configure the actions column via the underlying Grid.Column
 easyGrid.getActionsColumn()

@@ -131,13 +131,9 @@ doc-lag divergences are resolved, as are the two mismatches the revision briefly
   in the naming-consistency pass, then reverted to `getActionsColumn()` — matching the doc (and its
   original name). `setRowActionVariants` was likewise renamed to `setDefaultRowActionVariants` to make
   its "defaults for actions added later" semantics explicit.
-
-### Still outstanding (public API the doc omits)
-- `refreshRowActions()`, `setRowActionsRenderer(...)`, and `setDefaultRowActionVariants(...)` are public
-  but undocumented in the feature doc.
-- `EasyRowAction`'s styling/theming via `HasStyle` / `HasThemeVariant` is undocumented — and since the
-  `ButtonVariant` overload was dropped, per-action variants now depend on `addThemeVariants`, which the
-  doc doesn't mention.
+- ✅ **Remaining public methods documented.** `setDefaultRowActionVariants`, `setRowActionsRenderer`,
+  `refreshRowActions`, and `EasyRowAction`'s `HasStyle` / `HasThemeVariant` styling/theming are now
+  documented in `FEATURE_ROW_ACTIONS.md`.
 
 ### Open design / impl items
 - **`RowActionsRenderer` SPI is usable.** The interface is `public` (`RowActionsRenderer.java:38`) with
@@ -164,12 +160,13 @@ doc-lag divergences are resolved, as are the two mismatches the revision briefly
 | 7 | §3.4 | Doc realigned: `with`-prefix / icon types / tooltip type / `remove()` / dropped `ButtonVariant` | resolved | doc now matches code |
 | 8 | §3.4 | `EasyGrid.removeRowAction` dropped from doc — removal is `EasyRowAction.remove()` | resolved | doc corrected |
 | 9 | §3.4 | `getActionsColumn()` name restored (rename reverted to match doc) | resolved | — |
-| 10 | §3.4 | `refreshRowActions`/`setRowActionsRenderer`/`setDefaultRowActionVariants`/styling undocumented | doc update | document in `FEATURE_ROW_ACTIONS.md` |
+| 10 | §3.4 | `refreshRowActions`/`setRowActionsRenderer`/`setDefaultRowActionVariants`/styling now documented | resolved | — |
 | 11 | §3.4 | `RowActionsRenderer` public — extension point usable | resolved | built-in impls package-private (minor) |
 | 12 | §3.4 | `withConfirmation` English-only; `@Uses(ConfirmDialog)` absent | impl gap / deferred | see TODO.txt |
 
 Core component: conformant. The two genuine code-vs-spec contradictions (#1, #2) are in Enum/Boolean
 sorting. After the `FEATURE_ROW_ACTIONS.md` revision the row-actions doc now matches the code: both
 mismatches it briefly introduced — the grid-level `removeRowAction` (#8) and the `getActionsColumn`
-name (#9) — are reconciled, and the former renderer-SPI blocker (#11) is resolved. The remaining
-row-actions items are documentation-only (#10) plus the deferred i18n/bundling notes (#12).
+name (#9) — are reconciled, and the former renderer-SPI blocker (#11) is resolved. The previously
+undocumented public methods (#10) are now in the feature doc, leaving only the deferred i18n/bundling
+notes (#12).

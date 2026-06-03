@@ -54,10 +54,15 @@ public final class InstanceEasyGridConfiguration implements Serializable {
    * Returns the effective {@code ColumnConfiguration} for the given type, chaining configurations
    * across all levels of the tree. The resolution order, from most to least specific, is:
    * <ol>
-   * <li>Type-level configuration registered on this instance via {@link #forType(Class)}.</li>
-   * <li>Type-level configuration registered on {@link GlobalEasyGridConfiguration}.</li>
+   * <li>The isolated column-level layer on top of the chain (the node that an {@code EasyColumn}'s
+   * own setters write into).</li>
+   * <li>Type-level configuration registered on this instance via {@link #forType(Class)}, walking
+   * the class hierarchy from {@code type} up to {@code Object}.</li>
+   * <li>Type-level configuration registered on {@link GlobalEasyGridConfiguration} (including the
+   * built-in defaults), walking the class hierarchy from {@code type} up to {@code Object}.</li>
    * </ol>
-   * Each level's non-{@code null} fields take precedence over the levels below it.
+   * The first non-{@code null} value found wins, scope-first: a more specific scope is fully
+   * consulted before falling through to the next.
    *
    * @param type the column value type
    * @return the resolved configuration, never {@code null}

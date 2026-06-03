@@ -13,8 +13,9 @@ against `SPECIFICATIONS.md`. Row actions are specified separately in `FEATURE_RO
 **Bottom line:** the core component (discovery, construction, ordering, headers, nested
 properties, the `EasyColumn` API, the configuration tree, renderers, serialization) conforms to
 the spec. The only true spec-vs-code *contradictions* are in the §2.2 Sorting column (Boolean and
-Enum). The row-actions implementation has moved ahead of `FEATURE_ROW_ACTIONS.md`, which now needs
-updating.
+Enum). `FEATURE_ROW_ACTIONS.md` has since been revised to track the code; that closed the old
+doc-lag gaps, and the two mismatches the revision briefly introduced (a grid-level `removeRowAction`,
+and `getActionsColumn` vs `getRowActionsColumn`) have both been reconciled (see §3).
 
 ---
 
@@ -106,43 +107,47 @@ default nor exposes a toggle (use `getWrappedGrid().setMultiSort(...)`).
 
 ## 3. Row Actions (§3.4 → FEATURE_ROW_ACTIONS.md)
 
-### Resolved since 2026-05-26
+`FEATURE_ROW_ACTIONS.md` has been revised and now tracks the implementation closely. The earlier
+doc-lag divergences are resolved, as are the two mismatches the revision briefly introduced.
+
+### Resolved
 - ✅ **Menu mode renders.** `ContextMenuRowActionsRenderer` presents actions as a `GridContextMenu`
   with per-row visibility/enablement; covered by `EasyRowActionIT.testContextMenu` /
-  `testContextMenuVisibleWhen` / `testContextMenuEnabledWhen`. *(Old finding #5 "menu mode silently
-  no-ops" is obsolete.)*
-- ✅ **Mutation-after-registration.** The fluent mutators (`visibleWhen`, `enabledWhen`, `tooltip`,
-  `withConfirmation`) now auto-schedule a (coalesced) refresh. `refreshRowActions()` is only needed for
-  element-level changes (`addClassName`, `getStyle()`, `addThemeVariants`). *(Old ROW-ACTIONS-TODO #7.)*
-- ✅ **`withConfirmation` coverage.** `EasyRowActionIT.testConfirmation` exercises cancel, confirm,
-  deferred execution, and the `confirmPending` double-click guard. *(Old TODO #8.)*
+  `testContextMenuVisibleWhen` / `testContextMenuEnabledWhen`.
+- ✅ **Mutators auto-refresh.** `visibleWhen` / `enabledWhen` / `tooltip` / `withConfirmation` now
+  schedule a (coalesced) refresh; an explicit `refreshRowActions()` is only needed for element-level
+  changes (`addClassName`, `getStyle()`, `addThemeVariants`).
+- ✅ **`withConfirmation` IT coverage** — `EasyRowActionIT.testConfirmation` (cancel, confirm, deferred
+  execution, `confirmPending` guard).
+- ✅ **Doc realigned to code** — the revised doc drops the `with` prefix on
+  `visibleWhen`/`enabledWhen`/`tooltip`, documents the full icon overload set (label-only, `Icon`,
+  `IconFactory`, per-row `ValueProvider<T,ICON>`), uses `tooltip(ValueProvider<T,String>)`, documents
+  `EasyRowAction.remove()`, and no longer claims the `addRowAction(..., ButtonVariant, ...)` overload
+  (variants are applied via `addThemeVariants` / `setDefaultRowActionVariants`).
+- ✅ **Removal is `EasyRowAction.remove()`.** The doc previously declared a grid-level
+  `EasyGrid.removeRowAction(EasyRowAction)` that was never implemented; it has been dropped — removal
+  is the action's own `remove()`, so no grid-level method is needed.
+- ✅ **`getActionsColumn()` name restored.** The accessor was briefly renamed to `getRowActionsColumn()`
+  in the naming-consistency pass, then reverted to `getActionsColumn()` — matching the doc (and its
+  original name). `setRowActionVariants` was likewise renamed to `setDefaultRowActionVariants` to make
+  its "defaults for actions added later" semantics explicit.
 
-### Feature-doc divergences (doc lags the code)
-- **`with` prefix:** impl uses `visibleWhen` / `enabledWhen` / `tooltip` (no prefix) but kept
-  `withConfirmation`; the doc still shows `withVisibleWhen` / `withEnabledWhen` / `withTooltip`.
-- **Icon types:** the doc shows only `VaadinIcon`; the impl is broader — label-only, icon-only, `Icon`,
-  `IconFactory` (which `VaadinIcon` implements, so the doc's examples still compile), and per-row
-  `ValueProvider<T, ICON>` overloads.
-- **Tooltip type:** impl uses `ValueProvider<T,String>` vs the doc's `SerializableFunction`.
-- **`getActionsColumn()` → `getRowActionsColumn()`** and `setRowActionVariants` → `setRowActionsVariants`
-  (renamed for naming consistency); the doc still shows the old names.
-- **Not in the doc:** `EasyRowAction.remove()`, `refreshRowActions()`, `setRowActionsRenderer()`,
-  `setRowActionsVariants()`, per-row dynamic tooltip/icon, and `HasStyle` / `HasThemeVariant` on
-  `EasyRowAction`. *(The previous analysis claimed `HasRowActions.removeRowAction(EasyRowAction)` exists —
-  it does not; removal is `EasyRowAction.remove()`; `RowActionsManager.removeRowAction` is package-private.)*
+### Still outstanding (public API the doc omits)
+- `refreshRowActions()`, `setRowActionsRenderer(...)`, and `setDefaultRowActionVariants(...)` are public
+  but undocumented in the feature doc.
+- `EasyRowAction`'s styling/theming via `HasStyle` / `HasThemeVariant` is undocumented — and since the
+  `ButtonVariant` overload was dropped, per-action variants now depend on `addThemeVariants`, which the
+  doc doesn't mention.
 
-### Impl gaps / open design issues
-- **`addRowAction(String, VaadinIcon, ButtonVariant, handler)` not implemented.** Use
-  `action.addThemeVariants(...)` or `setRowActionsVariants(...)`. *(impl gap / intentional)*
-- **`RowActionsRenderer` SPI is usable.** The interface is `public` (`RowActionsRenderer.java:38`) and its
-  methods reference only public types (`EasyRowAction`, `Grid.Column`), so a consumer can implement a custom
-  renderer and pass it to `setRowActionsRenderer(...)`. Residual (minor): the built-in implementations
-  (`LitRowActionsRenderer`, `ContextMenuRowActionsRenderer`) remain package-private, so they can't be reused
-  or subclassed as a base. *(former blocker — resolved)*
+### Open design / impl items
+- **`RowActionsRenderer` SPI is usable.** The interface is `public` (`RowActionsRenderer.java:38`) with
+  public-only method signatures, so consumers can supply a custom renderer via `setRowActionsRenderer(...)`.
+  Residual (minor): the built-in implementations (`LitRowActionsRenderer`, `ContextMenuRowActionsRenderer`)
+  remain package-private, so they can't be reused or subclassed as a base.
 - **`withConfirmation` is English-only.** Hardcoded `"Ok"`/`"Cancel"`, no per-row/dynamic message, no i18n
-  hook. *(ROW-ACTIONS-TODO #4; deferred — recorded in TODO.txt)*
-- **`@Uses(ConfirmDialog.class)` still absent on `HasRowActions`** (only `@Uses(Button.class)`). The dialog
-  is created lazily; bundle impact should be confirmed. *(ROW-ACTIONS-TODO #3)*
+  hook. *(deferred — recorded in TODO.txt)*
+- **`@Uses(ConfirmDialog.class)` absent on `HasRowActions`** (only `@Uses(Button.class)`); the dialog is
+  created lazily, so bundle impact should be confirmed. *(ROW-ACTIONS-TODO #3)*
 
 ---
 
@@ -154,14 +159,17 @@ default nor exposes a toggle (use `getWrappedGrid().setMultiSort(...)`).
 | 2 | §2.2 | Enum sorting is natural/ordinal order, not "Alphabetical" | divergence | fix spec wording or add comparator |
 | 3 | §3.5 | `freeze()` blocks new registrations only; existing nodes stay mutable | doc | tighten javadoc/spec wording |
 | 4 | §3.5 | "Three utility classes" — impl ships four (adds `LocalTimeRenderers`) | spec update | update spec |
-| 5 | §3.5 | Column-level config layer real but undocumented | doc | update `CONFIGURATION_RESOLUTION.md` / javadoc |
-| 6 | §3.4 | Menu mode **now implemented** | resolved | — |
-| 7 | §3.4 | Mutators **now auto-refresh** | resolved | — |
-| 8 | §3.4 | `with` prefix, icon types, tooltip type, renamed methods | doc update | update `FEATURE_ROW_ACTIONS.md` |
-| 9 | §3.4 | `addRowAction(...ButtonVariant...)` absent | impl gap | add overload or accept `addThemeVariants` |
-| 10 | §3.4 | `RowActionsRenderer` made public — extension point usable | resolved | built-in impls still package-private (minor) |
-| 11 | §3.4 | `withConfirmation` English-only; `@Uses(ConfirmDialog)` absent | impl gap | see TODO.txt / ROW-ACTIONS-TODO |
+| 5 | §3.5 | Column-level layer now documented in `CONFIGURATION_RESOLUTION.md` | mostly resolved | `InstanceEasyGridConfiguration` javadoc still 2-level |
+| 6 | §3.4 | Menu mode implemented; mutators auto-refresh; `withConfirmation` covered | resolved | — |
+| 7 | §3.4 | Doc realigned: `with`-prefix / icon types / tooltip type / `remove()` / dropped `ButtonVariant` | resolved | doc now matches code |
+| 8 | §3.4 | `EasyGrid.removeRowAction` dropped from doc — removal is `EasyRowAction.remove()` | resolved | doc corrected |
+| 9 | §3.4 | `getActionsColumn()` name restored (rename reverted to match doc) | resolved | — |
+| 10 | §3.4 | `refreshRowActions`/`setRowActionsRenderer`/`setDefaultRowActionVariants`/styling undocumented | doc update | document in `FEATURE_ROW_ACTIONS.md` |
+| 11 | §3.4 | `RowActionsRenderer` public — extension point usable | resolved | built-in impls package-private (minor) |
+| 12 | §3.4 | `withConfirmation` English-only; `@Uses(ConfirmDialog)` absent | impl gap / deferred | see TODO.txt |
 
-Core component: conformant. Most outstanding items are documentation updates (spec/feature-doc lagging
-the code); the two genuine code-vs-spec contradictions (#1, #2) are in Enum/Boolean sorting, and the
-former renderer-SPI blocker (#10) is resolved — the interface is now public.
+Core component: conformant. The two genuine code-vs-spec contradictions (#1, #2) are in Enum/Boolean
+sorting. After the `FEATURE_ROW_ACTIONS.md` revision the row-actions doc now matches the code: both
+mismatches it briefly introduced — the grid-level `removeRowAction` (#8) and the `getActionsColumn`
+name (#9) — are reconciled, and the former renderer-SPI blocker (#11) is resolved. The remaining
+row-actions items are documentation-only (#10) plus the deferred i18n/bundling notes (#12).

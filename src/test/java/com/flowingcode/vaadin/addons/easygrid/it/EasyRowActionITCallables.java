@@ -15,7 +15,7 @@ public interface EasyRowActionITCallables extends RmiCallable {
 
   void setRowActionsAsMenu(boolean asMenu);
 
-  void setRowActionsVariants(ButtonVariant variant);
+  void setDefaultRowActionVariants(ButtonVariant variant);
 
   void refreshRowActions();
 
@@ -53,7 +53,7 @@ public interface EasyRowActionITCallables extends RmiCallable {
   //
   // void setRowActionsAsMenu(boolean asMenu);
   //
-  // // Column<Intger> getRowActionsColumn();
+  // // Column<Intger> getActionsColumn();
   //
   // void refreshRowActions();
 

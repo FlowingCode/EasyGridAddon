@@ -162,8 +162,8 @@ public interface HasRowActions<T> {
    *
    * @return the actions column, or {@code null} if the active renderer does not use a column
    */
-  default Grid.Column<T> getRowActionsColumn() {
-    return getRowActionsManager().getRowActionsColumn();
+  default Grid.Column<T> getActionsColumn() {
+    return getRowActionsManager().getActionsColumn();
   }
 
   /**
@@ -172,8 +172,8 @@ public interface HasRowActions<T> {
    *
    * @param variants the variants to apply to each new action
    */
-  default void setRowActionsVariants(ButtonVariant... variants) {
-    getRowActionsManager().setRowActionsVariants(variants);
+  default void setDefaultRowActionVariants(ButtonVariant... variants) {
+    getRowActionsManager().setDefaultRowActionVariants(variants);
   }
 
   /**

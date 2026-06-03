@@ -39,7 +39,7 @@ import lombok.NonNull;
  *
  * <p>A manager instance is created eagerly together with its grid. The instance itself is
  * lightweight; the actions {@link Grid.Column} it manages is created lazily — on the first renderer
- * update or {@link #getRowActionsColumn()} call — and stays hidden until the first action is added.
+ * update or {@link #getActionsColumn()} call — and stays hidden until the first action is added.
  *
  * @param <T> the grid bean type
  */
@@ -129,7 +129,7 @@ public class RowActionsManager<T> implements Serializable {
    *
    * @param variants the variants to apply
    */
-  void setRowActionsVariants(ButtonVariant... variants) {
+  void setDefaultRowActionVariants(ButtonVariant... variants) {
     this.defaultVariants = variants != null && variants.length > 0 ? variants : null;
   }
 
@@ -193,7 +193,7 @@ public class RowActionsManager<T> implements Serializable {
    * If a deferred renderer update is pending it is cancelled and applied immediately so the column
    * reflects the current action list.
    */
-  Grid.Column<T> getRowActionsColumn() {
+  Grid.Column<T> getActionsColumn() {
     if (!rendererInitialized) {
       updateRenderer();
       if (actions.isEmpty()) {

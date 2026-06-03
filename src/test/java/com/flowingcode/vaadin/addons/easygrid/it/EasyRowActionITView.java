@@ -74,8 +74,8 @@ public class EasyRowActionITView extends Div implements EasyRowActionITCallables
   }
 
   @Override
-  public void setRowActionsVariants(ButtonVariant variant) {
-    grid.setRowActionsVariants(variant);
+  public void setDefaultRowActionVariants(ButtonVariant variant) {
+    grid.setDefaultRowActionVariants(variant);
   }
 
   @Override
@@ -85,7 +85,7 @@ public class EasyRowActionITView extends Div implements EasyRowActionITCallables
 
   @Override
   public boolean isActionsColumnVisible() {
-    var column = grid.getRowActionsColumn();
+    var column = grid.getActionsColumn();
     return column != null && column.isVisible();
   }
 

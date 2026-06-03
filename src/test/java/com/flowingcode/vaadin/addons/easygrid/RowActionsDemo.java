@@ -75,7 +75,7 @@ public class RowActionsDemo extends Div {
         person -> Notification.show(
             (person.isSubscriber() ? "Unsubscribe" : "Subscribe") + ": " + person.getFirstName()));
 
-    grid.getRowActionsColumn().setHeader("Actions");
+    grid.getActionsColumn().setHeader("Actions");
     add(grid);
     setSizeFull();
   }

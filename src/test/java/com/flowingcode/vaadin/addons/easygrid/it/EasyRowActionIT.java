@@ -214,8 +214,8 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     assertTrue(theme2.contains("tertiary-inline"));
     assertTrue(theme2.contains("error"));
 
-    // setRowActionsVariants overrides the default for subsequently added actions
-    $server.setRowActionsVariants(ButtonVariant.LUMO_ERROR);
+    // setDefaultRowActionVariants overrides the default for subsequently added actions
+    $server.setDefaultRowActionVariants(ButtonVariant.LUMO_ERROR);
     $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(3));
     var theme3 = grid.getCell(0, 1).$("vaadin-button").get(2).getAttribute("theme");
     assertNotNull(theme3);

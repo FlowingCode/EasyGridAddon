@@ -70,6 +70,17 @@ public class RowActionsManager<T> implements Serializable {
     this.renderer = new LitRowActionsRenderer<>(grid);
   }
 
+  /**
+   * Creates and registers a new row action, applying the current default theme variants and
+   * scheduling a renderer rebuild. At least one of {@code labelProvider} or {@code iconProvider}
+   * must be non-{@code null}.
+   *
+   * @param <ICON> the icon type
+   * @param labelProvider per-row label provider, or {@code null} for icon-only
+   * @param iconProvider per-row icon provider, or {@code null} for label-only
+   * @param handler the action to execute when the action is clicked
+   * @return the registered action
+   */
   <ICON extends AbstractIcon<ICON>> EasyRowAction<T> addRowAction(
       ValueProvider<T, String> labelProvider,
       ValueProvider<T, ICON> iconProvider,

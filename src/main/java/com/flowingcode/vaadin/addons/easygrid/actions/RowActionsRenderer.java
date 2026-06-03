@@ -33,6 +33,7 @@ import java.util.List;
  * changes and a visual refresh is needed.
  *
  * @param <T> the grid bean type
+ * @see HasRowActions#setRowActionsRenderer(RowActionsRenderer)
  * @see LitRowActionsRenderer
  */
 public interface RowActionsRenderer<T> extends Serializable {

@@ -39,7 +39,8 @@ import lombok.NonNull;
  * (or menu items when {@code setRowActionsAsMenu(true)} is used) in a dedicated actions column.
  *
  * <p>Use the fluent methods to configure conditional visibility, conditional enablement, tooltips,
- * and optional confirmation dialogs before the action is executed.
+ * and optional confirmation dialogs before the action is executed. The rendered button can also be
+ * styled and themed through the inherited {@link HasStyle} and {@link HasThemeVariant} methods.
  *
  * @param <T> the grid bean type
  */
@@ -56,6 +57,11 @@ public final class EasyRowAction<T>
   private static final String[] LIFTED_ICON_NAMES =
       {"icon", "src", ".symbol", ".ligature", ".char", ".fontFamily", ".iconClass"};
 
+  /**
+   * Backing element for this action. It is never attached to the DOM; it carries the attributes,
+   * CSS classes/styles ({@link HasStyle}), and theme variants ({@link HasThemeVariant}) that are
+   * forwarded onto the rendered {@code <vaadin-button>} when the actions column is built.
+   */
   @Getter
   private final Element element = new Element("easy-row-action");
 
@@ -242,7 +248,7 @@ public final class EasyRowAction<T>
         }
 
         // Forward all attributes/properties set on this action's element (e.g. CSS classes) except the two handled below
-        renderer.copyAllAtttributesAndPropertiesExcept(this, "theme", "title");
+        renderer.copyAllAttributesAndPropertiesExcept(this, "theme", "title");
         // Bind the title attribute per-item so tooltip text can vary by row
         renderer.bind("title", tooltipProvider);
         // Set the theme attribute statically; getTheme() appends "icon" when the button is icon-only

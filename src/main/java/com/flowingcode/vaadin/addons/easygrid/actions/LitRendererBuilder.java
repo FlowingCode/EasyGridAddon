@@ -15,6 +15,19 @@ import java.util.List;
 import java.util.function.Predicate;
 import lombok.NonNull;
 
+/**
+ * Builds the Lit template and backing {@link LitRenderer} for an {@code EasyGrid} row-actions
+ * column. Callers open elements with {@link #tag(String, Runnable)} and add attribute/property
+ * bindings, content, and per-row server functions; all per-row values are exposed to the template
+ * through a single {@code item.<property>} object, addressed by index.
+ *
+ * <p>The builder is single-use: after {@link #build()} (or {@link #getTemplate()}) it is closed and
+ * further mutation throws {@link IllegalStateException}. When at least one per-row value is
+ * registered, the whole template is wrapped in a presence guard so it renders nothing until the
+ * backing property object is populated on the client.
+ *
+ * @param <T> the grid bean type
+ */
 final class LitRendererBuilder<T> {
 
   private final String property;
@@ -91,7 +104,7 @@ final class LitRendererBuilder<T> {
    * Opens {@code <name}, runs {@code body}, then closes with {@code </name>}. The body should add
    * attribute bindings first (via {@link #set}, {@link #bind}, {@link #bindBoolean},
    * {@link #bindObject}, {@link #copyAttributes}, {@link #bindAttributes},
-   * {@link #bindAllAttributesAndProperties}) and then content (via nested {@link #tag},
+   * {@link #spreadAllAttributesAndProperties}) and then content (via nested {@link #tag},
    * {@link #withCondition}, {@link #addContent}, or {@link #append}). The opening {@code >} is
    * emitted automatically the first time the body adds content, or at body-end for an empty tag.
    * Tags nest to arbitrary depth.
@@ -274,7 +287,7 @@ final class LitRendererBuilder<T> {
    * emitted with a {@code .} prefix; attributes are emitted as-is. An empty {@code names} array
    * copies everything.
    */
-  public void copyAllAtttributesAndPropertiesExcept(HasElement component, String... names) {
+  public void copyAllAttributesAndPropertiesExcept(HasElement component, String... names) {
     requireNotClosed();
     Element element = component.getElement();
 
@@ -336,7 +349,7 @@ final class LitRendererBuilder<T> {
    * prefix-aware dispatch as {@link #copyAttributes}). This allows elements with dedicated named
    * properties (such as {@code <fc-icon>}) to receive well-known fields by name rather than
    * through the generic spread maps. For a {@code Constant} provider, lifting is performed via
-   * {@link #copyAttributes} and the remainder via {@link #copyAllAtttributesAndPropertiesExcept}.
+   * {@link #copyAttributes} and the remainder via {@link #copyAllAttributesAndPropertiesExcept}.
    *
    * @param <C> the component type
    * @param componentProvider provides the source component for each row item
@@ -351,7 +364,7 @@ final class LitRendererBuilder<T> {
     if (componentProvider instanceof Constant) {
       C component = componentProvider.apply(null);
       if (component != null) {
-        copyAllAtttributesAndPropertiesExcept(component, liftedNames);
+        copyAllAttributesAndPropertiesExcept(component, liftedNames);
         copyAttributes(component, liftedNames);
       }
       return;

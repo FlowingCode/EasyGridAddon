@@ -12,7 +12,7 @@
     <url>https://www.flowingcode.com/en/open-source/</url>
 
     <properties>
-        <vaadin.version>24.10.6</vaadin.version>
+        <vaadin.version>25.0.0</vaadin.version>
         <selenium.version>4.10.0</selenium.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>com.flowingcode.vaadin</groupId>
             <artifactId>json-migration-helper</artifactId>
-            <version>0.9.3</version>
+            <version>0.9.4-SNAPSHOT</version> 
         </dependency>
         <dependency>
             <groupId>com.flowingcode.vaadin.test</groupId>

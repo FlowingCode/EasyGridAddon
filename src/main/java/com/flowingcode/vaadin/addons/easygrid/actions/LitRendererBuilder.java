@@ -20,6 +20,7 @@
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
 import com.flowingcode.vaadin.jsonmigration.JsonSerializer;
+import com.flowingcode.vaadin.jsonmigration.LitRendererMigrationExtension;
 import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import lombok.NonNull;
+import lombok.experimental.ExtensionMethod;
 
 /**
  * Builds the Lit template and backing {@link LitRenderer} for an {@code EasyGrid} row-actions
@@ -48,6 +50,7 @@ import lombok.NonNull;
  *
  * @param <T> the grid bean type
  */
+@ExtensionMethod(value = LitRendererMigrationExtension.class, suppressBaseMethods = true)
 final class LitRendererBuilder<T> {
 
   private static final Pattern PROPERTY_PATTERN = Pattern.compile("[A-Za-z][A-Za-z0-9]*");
@@ -122,6 +125,8 @@ final class LitRendererBuilder<T> {
     }
     return renderer;
   }
+
+
 
   /**
    * Opens {@code <name}, runs {@code body}, then closes with {@code </name>}. The body should add

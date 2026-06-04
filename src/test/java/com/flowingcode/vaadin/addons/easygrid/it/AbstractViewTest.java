@@ -24,6 +24,7 @@ import com.vaadin.testbench.ScreenshotOnFailureRule;
 import com.vaadin.testbench.TestBench;
 import com.vaadin.testbench.parallel.ParallelTest;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import java.util.concurrent.Semaphore;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -62,15 +63,23 @@ public abstract class AbstractViewTest extends ParallelTest {
     WebDriverManager.chromedriver().setup();
   }
 
+  private final static Semaphore semaphore = new Semaphore(4);
+
   @Override
   @Before
   public void setup() throws Exception {
-    if (isUsingHub()) {
-      super.setup();
-    } else {
-      setDriver(TestBench.createDriver(new ChromeDriver()));
+    semaphore.acquire();
+    try {
+      if (isUsingHub()) {
+        super.setup();
+      } else {
+        setDriver(TestBench.createDriver(new ChromeDriver()));
+      }
+      getDriver().get(getURL(route));
+      getCommandExecutor().waitForVaadin();
+    } finally {
+      semaphore.release();
     }
-    getDriver().get(getURL(route));
   }
 
   /**

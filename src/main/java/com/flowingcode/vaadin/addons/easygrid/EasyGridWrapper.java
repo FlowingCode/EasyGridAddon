@@ -20,6 +20,8 @@
 
 package com.flowingcode.vaadin.addons.easygrid;
 
+import com.flowingcode.vaadin.addons.easygrid.actions.HasRowActions;
+import com.flowingcode.vaadin.addons.easygrid.actions.RowActionsManager;
 import com.flowingcode.vaadin.addons.easygrid.config.ColumnConfiguration;
 import com.flowingcode.vaadin.addons.easygrid.config.InstanceEasyGridConfiguration;
 import com.vaadin.flow.component.grid.Grid;
@@ -50,7 +52,8 @@ import lombok.NonNull;
  * @param <GRID> the concrete {@code Grid} subtype being wrapped
  */
 @SuppressWarnings("serial")
-public class EasyGridWrapper<T, GRID extends Grid<T>> extends EasyGridComposite<T, GRID> {
+public class EasyGridWrapper<T, GRID extends Grid<T>> extends EasyGridComposite<T, GRID>
+    implements HasRowActions<T> {
 
   @Getter
   private final Class<T> beanType;
@@ -269,5 +272,8 @@ public class EasyGridWrapper<T, GRID extends Grid<T>> extends EasyGridComposite<
   public <V> ColumnConfiguration<V> typeConfiguration(Class<V> type) {
     return configuration.forType(type);
   }
+
+  @Getter(lazy = true)
+  private final RowActionsManager<T> rowActionsManager = new RowActionsManager<>(getWrappedGrid());
 
 }

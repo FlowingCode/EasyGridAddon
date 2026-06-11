@@ -20,6 +20,8 @@
 
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
+import com.flowingcode.vaadin.addons.easygrid.RuntimeReflectiveOperationException;
+import com.vaadin.flow.component.ComponentEventListener;
 import com.vaadin.flow.component.HasStyle;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
@@ -31,6 +33,7 @@ import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.SerializableSupplier;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -47,6 +50,18 @@ import lombok.NonNull;
 @SuppressWarnings("serial")
 public final class EasyRowAction<T>
     implements Serializable, HasStyle, HasThemeVariant<ButtonVariant> {
+
+  // ConfirmDialog.addOpenedChangeListener was introduced in Vaadin 25; it does not exist in Vaadin 24.
+  // Resolved once at class load: non-null means Vaadin 25 (use the Java listener); null means
+  // Vaadin 24 (fall back to the DOM opened-changed event).
+  private static final Method ADD_OPENED_CHANGE_LISTENER;
+  static {
+    Method addListener = null;
+    try {
+      addListener = ConfirmDialog.class.getMethod("addOpenedChangeListener", ComponentEventListener.class);
+    } catch (NoSuchMethodException ignored) {}
+    ADD_OPENED_CHANGE_LISTENER = addListener;
+  }
 
   private RowActionsManager<T> manager;
 
@@ -226,8 +241,22 @@ public final class EasyRowAction<T>
       ConfirmDialog dialog = confirmDialogSupplier.get();
       dialog.addConfirmListener(e -> actionHandler.accept(item));
       // Reset on any close path: confirm, cancel, or programmatic dialog.close()
-      dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
-          .setFilter("event.detail.value === false");
+      if (ADD_OPENED_CHANGE_LISTENER != null) {
+        @SuppressWarnings({"rawtypes"})
+        ComponentEventListener l = e -> {
+          if (!dialog.isOpened()) {
+            confirmPending = false;
+          }
+        };
+        try {
+          ADD_OPENED_CHANGE_LISTENER.invoke(dialog, l);
+        } catch (ReflectiveOperationException ex) {
+          throw new RuntimeReflectiveOperationException(ex);
+        }
+      } else {
+        dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
+            .setFilter("event.detail.value === false");
+      }
       dialog.open();
     } else {
       actionHandler.accept(item);

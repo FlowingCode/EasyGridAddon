@@ -23,6 +23,7 @@ import com.flowingcode.vaadin.addons.easygrid.EasyGrid;
 import com.flowingcode.vaadin.jsonmigration.InstrumentedRoute;
 import com.flowingcode.vaadin.jsonmigration.LegacyClientCallable;
 import com.flowingcode.vaadin.testbench.rpc.RmiRemote;
+import com.flowingcode.vaadin.testbench.rpc.Version;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.icon.IconFactory;
@@ -34,6 +35,7 @@ import java.util.stream.IntStream;
 import lombok.Getter;
 import lombok.experimental.Delegate;
 
+@SuppressWarnings("serial")
 @InstrumentedRoute(EasyRowActionITView.ROUTE)
 public class EasyRowActionITView extends Div implements EasyRowActionITCallables {
 
@@ -82,6 +84,11 @@ public class EasyRowActionITView extends Div implements EasyRowActionITCallables
   }
 
   @Override
+  public Version getVersion() {
+    return new Version();
+  }
+
+  @Override
   public RmiEasyRowAction<Integer> addRowAction(String label,
       SerializableConsumer<Integer> handler) {
     return RmiEasyRowAction.of(grid.addRowAction(label, handler));
@@ -108,21 +115,6 @@ public class EasyRowActionITView extends Div implements EasyRowActionITCallables
     return column != null && column.isVisible();
   }
 
-  //
-  // RmiEasyRowAction<Integer> addRowAction(
-  // String label,
-  // Icon icon,
-  // SerializableConsumer<Integer> handler);
-  //
-  // RmiEasyRowAction<Integer> addRowAction(
-  // Icon icon,
-  // SerializableConsumer<Integer> handler);
-  //
-  // RmiEasyRowAction<Integer> addRowAction(
-  // String label,
-  // IconFactory iconFactory,
-  // SerializableConsumer<Integer> handler);
-  //
   @Override
   public RmiEasyRowAction<Integer> addRowAction(
       IconFactory iconFactory,

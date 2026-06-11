@@ -50,28 +50,28 @@ final class ContextMenuRowActionsRenderer<T> implements RowActionsRenderer<T> {
   public void update(List<EasyRowAction<T>> actions) {
     currentActions = new ArrayList<>(actions);
     if (contextMenu == null) {
-      contextMenu = grid.addContextMenu();
+      var menu = contextMenu = grid.addContextMenu();
       // item is the row bean for which the menu is opening; it is the same object for every
       // menu item built in this handler invocation, so capturing it in the click listeners is safe.
-      contextMenu.setDynamicContentHandler(item -> {
+      menu.setDynamicContentHandler(item -> {
         if (item == null) {
           return false;
         }
-        contextMenu.removeAll();
+        menu.removeAll();
         for (EasyRowAction<T> action : currentActions) {
           if (action.isVisible(item)) {
             String label = action.getLabel(item);
             var icon = action.getIcon(item);
             var menuItem = (label != null)
-                ? contextMenu.addItem(label, e -> action.execute(item))
-                : contextMenu.addItem(icon, e -> action.execute(item));
+                ? menu.addItem(label, e -> action.execute(item))
+                : menu.addItem(icon, e -> action.execute(item));
             menuItem.setEnabled(action.isEnabled(item));
             if (label != null && icon != null) {
               menuItem.addComponentAsFirst(icon);
             }
           }
         }
-        return !contextMenu.getItems().isEmpty();
+        return !menu.getItems().isEmpty();
       });
     }
   }
@@ -87,6 +87,7 @@ final class ContextMenuRowActionsRenderer<T> implements RowActionsRenderer<T> {
       contextMenu.getElement().removeFromParent();
       contextMenu = null;
     }
+    currentActions = List.of();
   }
 
 }

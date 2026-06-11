@@ -27,7 +27,9 @@ import static org.junit.Assert.assertTrue;
 import com.flowingcode.vaadin.testbench.rpc.HasRpcSupport;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.testbench.ConfirmDialogElement;
+import com.vaadin.flow.component.contextmenu.testbench.ContextMenuItemElement;
 import com.vaadin.flow.component.contextmenu.testbench.ContextMenuOverlayElement;
+import java.util.List;
 import com.vaadin.flow.component.grid.testbench.GridElement;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import org.junit.Before;
@@ -47,6 +49,11 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
   @Before
   public void before() {
     grid = $(GridElement.class).waitForFirst();
+  }
+
+  // TODO: in V25 use $(ContextMenuElement.class).waitForFirst() and its getMenuItems()
+  private List<ContextMenuItemElement> getContextMenuItems() {
+    return $(ContextMenuOverlayElement.class).waitForFirst().getMenuItems();
   }
 
   @Test
@@ -145,13 +152,13 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
 
     // right-click opens the context menu
     grid.getCell(0, 0).contextClick();
-    var overlay = $(ContextMenuOverlayElement.class).waitForFirst();
+    var items = getContextMenuItems();
 
     // one menu item for the registered action
-    assertEquals(1, overlay.getMenuItems().size());
+    assertEquals(1, items.size());
 
     // clicking the item fires the handler with the correct item (row 0 = item 1)
-    overlay.getMenuItems().get(0).click();
+    items.get(0).click();
     assertEquals(Integer.valueOf(1), $server.getClickedValue());
   }
 
@@ -164,13 +171,12 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
 
     // Delete absent for odd row (row 0 = item 1); only Edit shown
     grid.getCell(0, 0).contextClick();
-    var overlay = $(ContextMenuOverlayElement.class).waitForFirst();
-    assertEquals(1, overlay.getMenuItems().size());
+    assertEquals(1, getContextMenuItems().size());
     new org.openqa.selenium.interactions.Actions(getDriver()).sendKeys(Keys.ESCAPE).perform();
 
     // even row (row 1 = item 2): both items shown
     grid.getCell(1, 0).contextClick();
-    assertEquals(2, $(ContextMenuOverlayElement.class).waitForFirst().getMenuItems().size());
+    assertEquals(2, getContextMenuItems().size());
   }
 
   @Test
@@ -181,7 +187,7 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
 
     // menu item disabled for odd row (row 0 = item 1)
     grid.getCell(0, 0).contextClick();
-    var item = $(ContextMenuOverlayElement.class).waitForFirst().getMenuItems().get(0);
+    var item = getContextMenuItems().get(0);
     assertNotNull(item.getAttribute("disabled"));
   }
 

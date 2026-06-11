@@ -19,6 +19,7 @@
  */
 package com.flowingcode.vaadin.addons.easygrid.actions;
 
+import com.flowingcode.vaadin.jsonmigration.JsonMigration;
 import com.flowingcode.vaadin.jsonmigration.JsonSerializer;
 import com.flowingcode.vaadin.jsonmigration.LitRendererMigrationExtension;
 import com.vaadin.flow.component.HasElement;
@@ -117,7 +118,7 @@ final class LitRendererBuilder<T> {
         for (int i = 0; i < n; i++) {
           obj.put(keys[i], JsonSerializer.toJson(providers[i].apply(t)));
         }
-        return obj;
+        return JsonMigration.convertToClientCallableResult(obj);
       });
     }
 

@@ -175,7 +175,9 @@ public class RowActionsManager<T> implements Serializable {
   private void updateRenderer() {
     setRendererRegistration(null);
     renderer.update(Collections.unmodifiableList(actions));
+    grid.getGenericDataView().refreshAll();
     rendererInitialized = true;
+    updateColumnVisibility();
   }
 
   /**
@@ -190,7 +192,6 @@ public class RowActionsManager<T> implements Serializable {
   Grid.Column<T> getActionsColumn() {
     if (!rendererInitialized) {
       updateRenderer();
-      updateColumnVisibility();
     }
     return renderer.getColumn();
   }

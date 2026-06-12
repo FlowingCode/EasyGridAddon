@@ -27,11 +27,12 @@ import static org.junit.Assert.assertTrue;
 import com.flowingcode.vaadin.testbench.rpc.HasRpcSupport;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.confirmdialog.testbench.ConfirmDialogElement;
+import com.vaadin.flow.component.contextmenu.testbench.ContextMenuElement;
 import com.vaadin.flow.component.contextmenu.testbench.ContextMenuItemElement;
-import com.vaadin.flow.component.contextmenu.testbench.ContextMenuOverlayElement;
 import java.util.List;
 import com.vaadin.flow.component.grid.testbench.GridElement;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.testbench.TestBenchElement;
 import org.junit.Before;
 import org.junit.Test;
 import org.openqa.selenium.Keys;
@@ -51,9 +52,34 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     grid = $(GridElement.class).waitForFirst();
   }
 
-  // TODO: in V25 use $(ContextMenuElement.class).waitForFirst() and its getMenuItems()
+  // In V24 the menu items are read from the <vaadin-context-menu-overlay> via
+  // ContextMenuOverlayElement; in V25 that overlay element is gone (ContextMenuOverlayElement is
+  // deprecated and now maps to <vaadin-context-menu>) and items are read from ContextMenuElement.
+  // Resolve the version-appropriate, non-deprecated element class by name and invoke its
+  // getMenuItems() reflectively so this compiles and runs against either Vaadin version.
+  @SuppressWarnings("unchecked")
   private List<ContextMenuItemElement> getContextMenuItems() {
-    return $(ContextMenuOverlayElement.class).waitForFirst().getMenuItems();
+    int major = $server.getVersion().getMajorVersion();
+    String className = major >= 25
+        ? "com.vaadin.flow.component.contextmenu.testbench.ContextMenuElement"
+        : "com.vaadin.flow.component.contextmenu.testbench.ContextMenuOverlayElement";
+    try {
+      Class<? extends TestBenchElement> elementClass =
+          Class.forName(className).asSubclass(TestBenchElement.class);
+      TestBenchElement element = $(elementClass).waitForFirst();
+      return (List<ContextMenuItemElement>) element.getClass().getMethod("getMenuItems")
+          .invoke(element);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Unable to resolve context menu items for V" + major, e);
+    }
+  }
+
+  // Whether a context menu overlay is currently open. In V24 the open overlay is a separate
+  // <vaadin-context-menu-overlay> element, while in V25 it is a child of <vaadin-context-menu>;
+  // rather than probe for either DOM shape, rely on the "opened" attribute exposed through
+  // ContextMenuElement.isOpen(), which maps to <vaadin-context-menu> in both versions.
+  private boolean isContextMenuOpen() {
+    return $(ContextMenuElement.class).all().stream().anyMatch(ContextMenuElement::isOpen);
   }
 
   @Test
@@ -265,9 +291,9 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
 
     // positive control: the context menu opens while in menu mode
     grid.getCell(0, 0).contextClick();
-    $(ContextMenuOverlayElement.class).waitForFirst();
+    waitUntil(d -> isContextMenuOpen());
     new org.openqa.selenium.interactions.Actions(getDriver()).sendKeys(Keys.ESCAPE).perform();
-    waitUntil(d -> $(ContextMenuOverlayElement.class).all().isEmpty());
+    waitUntil(d -> !isContextMenuOpen());
 
     // switch back to inline buttons and wait for the actions column to render
     $server.setRowActionsAsMenu(false);
@@ -287,7 +313,7 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
       Thread.currentThread().interrupt();
       throw new IllegalStateException(e);
     }
-    assertTrue($(ContextMenuOverlayElement.class).all().isEmpty());
+    assertFalse(isContextMenuOpen());
   }
 
   @Test

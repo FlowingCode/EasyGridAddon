@@ -28,7 +28,9 @@ import com.vaadin.flow.component.HasElement;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.ValueProvider;
+import elemental.json.Json;
 import elemental.json.JsonObject;
+import elemental.json.JsonValue;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -46,7 +48,13 @@ public class LitRendererBuilderTest {
   private static JsonObject actionsFor(LitRenderer<Pojo> renderer, Pojo row) {
     ValueProvider<Pojo, ?> vp = renderer.getValueProviders().get("actions");
     assertNotNull("expected an 'actions' value provider", vp);
-    return (JsonObject) vp.apply(row);
+    // The provider's value is meant to be serialized to the client, not read back through the
+    // elemental API. Under V25 it is a Jackson-backed node whose elemental JsonObject accessors
+    // (getString/getBoolean/getObject) are unimplemented and throw AbstractMethodError. Round-trip
+    // through toJson()/Json.parse() to obtain a real JsonObject whose accessors behave identically
+    // on V24 and V25.
+    JsonValue value = (JsonValue) vp.apply(row);
+    return Json.parse(value.toJson());
   }
 
   /**

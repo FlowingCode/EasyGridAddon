@@ -84,6 +84,15 @@ Replaces the strategy that turns the registered actions into UI. The built-in in
 
 ---
 
+#### Refreshing after configuration changes
+
+```java
+void refreshRowActions();
+```
+Schedules a rebuild of the actions column on the next server response. The fluent `EasyRowAction` methods (`visibleWhen`, `enabledWhen`, `tooltip`, `withConfirmation`) already trigger this automatically, so an explicit call is only needed after changing an action's attribute or property, which are not applied automatically.
+
+---
+
 ### `EasyRowAction<T>`
 
 All mutator methods return `this` to support method chaining.

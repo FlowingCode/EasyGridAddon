@@ -75,6 +75,15 @@ Sets the Vaadin `ButtonVariant`s applied by default to every action button creat
 
 ---
 
+#### Custom renderer
+
+```java
+void setRowActionsRenderer(RowActionsRenderer<T> renderer);
+```
+Replaces the strategy that turns the registered actions into UI. The built-in inline-button and context-menu renderers (selected via `setRowActionsAsMenu`) cover the common cases; supply a custom `RowActionsRenderer<T>` to present actions another way. The previous renderer is cleaned up and a rebuild is scheduled.
+
+---
+
 ### `EasyRowAction<T>`
 
 All mutator methods return `this` to support method chaining.

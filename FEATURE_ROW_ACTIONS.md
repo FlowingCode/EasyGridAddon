@@ -139,6 +139,19 @@ Intercepts button clicks and presents a confirmation dialog before invoking the 
 
 ---
 
+#### Styling and theme variants
+
+`EasyRowAction<T>` implements `HasStyle` and `HasThemeVariant<ButtonVariant>`, so the action's button can be styled and themed directly:
+
+```java
+action.addClassName("danger");
+action.getStyle().set("font-weight", "bold");
+action.addThemeVariants(ButtonVariant.LUMO_ERROR);
+```
+These are forwarded onto the rendered button. Unlike the fluent mutators above, style and theme-variant changes made after the grid has already rendered are **not** applied automatically — call `easyGrid.refreshRowActions()` afterwards to make them visible.
+
+---
+
 #### Removal
 
 ```java
@@ -189,6 +202,10 @@ adminAction.remove();
 
 // Default theme variants applied to every action added afterwards
 easyGrid.setDefaultRowActionVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
+
+// Style or theme an individual action's button
+easyGrid.addRowAction("Reset", person -> reset(person))
+    .addClassName("warning");
 
 // Configure the actions column via the underlying Grid.Column
 easyGrid.getActionsColumn()

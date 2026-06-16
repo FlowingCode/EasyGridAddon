@@ -48,15 +48,6 @@ Adds an action button whose icon is resolved per row by calling `iconProvider` w
 
 ---
 
-#### Removing row actions
-
-```java
-void removeRowAction(EasyRowAction<T> action);
-```
-Removes the specified action from the actions column. Equivalent to calling `action.remove()`.
-
----
-
 #### Rendering mode
 
 ```java
@@ -126,7 +117,7 @@ Intercepts button clicks and presents a confirmation dialog before invoking the 
 ```java
 void remove();
 ```
-Removes this action from the actions column and triggers an immediate re-render so the change is visible without waiting for a data refresh. Equivalent to calling `easyGrid.removeRowAction(this)`. If the action has already been removed, this call is a no-op. After removal the `EasyRowAction` reference is considered dead and cannot be re-added; call `addRowAction` again to create a new action.
+Removes this action from the actions column and triggers an immediate re-render so the change is visible without waiting for a data refresh. If the action has already been removed, this call is a no-op. After removal the `EasyRowAction` reference is considered dead and cannot be re-added; call `addRowAction` again to create a new action.
 
 ---
 
@@ -167,8 +158,6 @@ easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
 // Removing an action
 EasyRowAction<Person> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
 // later:
-easyGrid.removeRowAction(adminAction);
-// or equivalently, if only the action reference is in scope:
 adminAction.remove();
 
 // Configure the actions column via the underlying Grid.Column

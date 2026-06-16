@@ -66,6 +66,15 @@ Returns the `Grid.Column<T>` backing the actions column, allowing the caller to 
 
 ---
 
+#### Default theme variants
+
+```java
+void setDefaultRowActionVariants(ButtonVariant... variants);
+```
+Sets the Vaadin `ButtonVariant`s applied by default to every action button created *after* this call; actions added earlier are unaffected. The built-in default is `LUMO_TERTIARY_INLINE`. Pass no arguments (or `null`) to clear the defaults. Individual actions can still add their own variants via `EasyRowAction.addThemeVariants(...)`.
+
+---
+
 ### `EasyRowAction<T>`
 
 All mutator methods return `this` to support method chaining.
@@ -159,6 +168,9 @@ easyGrid.addRowAction("Deactivate", VaadinIcon.CLOSE, person -> {
 EasyRowAction<Person> adminAction = easyGrid.addRowAction("Purge", VaadinIcon.TRASH, item -> purge(item));
 // later:
 adminAction.remove();
+
+// Default theme variants applied to every action added afterwards
+easyGrid.setDefaultRowActionVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUMO_TERTIARY);
 
 // Configure the actions column via the underlying Grid.Column
 easyGrid.getActionsColumn()

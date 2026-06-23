@@ -1,6 +1,6 @@
 # Feature: Row Actions
 
-Row actions are buttons or menu items displayed in a dedicated actions column, created and managed by `EasyGrid` on the wrapped grid.
+Row actions are buttons or menu items presented by `EasyGrid` on the wrapped grid — as inline buttons, an overflow menu, or the grid's right-click context menu.
 
 ## API
 
@@ -8,7 +8,7 @@ Row actions are buttons or menu items displayed in a dedicated actions column, c
 
 #### Adding row actions
 
-All `addRowAction` overloads append a new action to the actions column and return an `EasyRowAction<T>` that can be further configured via its fluent API (visibility, enablement, tooltip, confirmation).
+All `addRowAction` overloads register a new action and return an `EasyRowAction<T>` that can be further configured via its fluent API (visibility, enablement, tooltip, confirmation). How the action is presented depends on the current `RowActionsStyle`.
 
 ```java
 EasyRowAction<T> addRowAction(String label, SerializableConsumer<T> handler);
@@ -47,9 +47,13 @@ Adds an action button whose icon is resolved per row by calling `iconProvider` w
 #### Rendering mode
 
 ```java
-void setRowActionsAsMenu(boolean asMenu);
+void setRowActionsStyle(RowActionsStyle style);
 ```
-Controls how row actions are rendered. When `true`, all actions are presented as items in an overflow (context) menu triggered by a single button per row. When `false` (the default), each action is rendered as a separate inline button in the actions column.
+Controls how row actions are presented. `RowActionsStyle` has three values:
+
+- `INLINE_BUTTONS` (the default) — each action is rendered as a separate inline button in the actions column.
+- `DROPDOWN` — all actions are presented as items in an overflow menu, opened by a single trigger button per row that is hosted in the actions column.
+- `CONTEXT_MENU` — all actions are presented as items in the grid's right-click context menu; no actions column is created.
 
 ---
 
@@ -58,7 +62,9 @@ Controls how row actions are rendered. When `true`, all actions are presented as
 ```java
 Grid.Column<T> getActionsColumn();
 ```
-Returns the `Grid.Column<T>` backing the actions column, allowing the caller to configure its header text, width, freeze position, or any other `Grid.Column` property. The actions column is created automatically when the first action is added.
+Returns the `Grid.Column<T>` backing the actions column, allowing the caller to configure its header text, width, freeze position, or any other `Grid.Column` property. For the column-based styles the column is created automatically when the actions are first rendered.
+
+Returns a non-`null` column for the `INLINE_BUTTONS` and `DROPDOWN` styles (the latter hosts its overflow menu trigger button in the column). For the `CONTEXT_MENU` style the actions are not hosted in a column, so this method returns `null`.
 
 ---
 
@@ -76,7 +82,7 @@ Sets the Vaadin `ButtonVariant`s applied by default to every action button creat
 ```java
 void setRowActionsRenderer(RowActionsRenderer<T> renderer);
 ```
-Replaces the strategy that turns the registered actions into UI. The built-in inline-button and context-menu renderers (selected via `setRowActionsAsMenu`) cover the common cases; supply a custom `RowActionsRenderer<T>` to present actions another way. The previous renderer is cleaned up and a rebuild is scheduled.
+Replaces the strategy that turns the registered actions into UI. The built-in renderers (selected via `setRowActionsStyle`) cover the common cases; supply a custom `RowActionsRenderer<T>` to present actions another way. The previous renderer is cleaned up and a rebuild is scheduled.
 
 ---
 
@@ -85,7 +91,7 @@ Replaces the strategy that turns the registered actions into UI. The built-in in
 ```java
 void refreshRowActions();
 ```
-Schedules a rebuild of the actions column on the next server response. The fluent `EasyRowAction` methods (`visibleWhen`, `enabledWhen`, `tooltip`, `withConfirmation`) already trigger this automatically, so an explicit call is only needed after changing an action's attribute or property, which are not applied automatically.
+Schedules a rebuild of the row actions on the next server response. The fluent `EasyRowAction` methods (`visibleWhen`, `enabledWhen`, `tooltip`, `withConfirmation`) already trigger this automatically, so an explicit call is only needed after changing an action's attribute or property, which are not applied automatically.
 
 ---
 
@@ -153,7 +159,7 @@ These are forwarded onto the rendered button. Unlike the fluent mutators above, 
 ```java
 void remove();
 ```
-Removes this action from the actions column and triggers an immediate re-render so the change is visible without waiting for a data refresh. If the action has already been removed, this call is a no-op. After removal the `EasyRowAction` reference is considered dead and cannot be re-added; call `addRowAction` again to create a new action.
+Removes this action. The row actions are re-rendered on the next server response, refreshing the grid's data view so the change becomes visible without an explicit data refresh. If the action has already been removed, this call is a no-op. After removal the `EasyRowAction` reference is considered dead and cannot be re-added; call `addRowAction` again to create a new action.
 
 ---
 

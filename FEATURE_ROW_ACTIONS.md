@@ -185,8 +185,11 @@ easyGrid.addRowAction(
     person -> toggleActive(person)
 );
 
-// Actions as a context menu (overflow menu) instead of inline buttons
-easyGrid.setRowActionsAsMenu(true);
+// Actions as an overflow menu instead of inline buttons
+easyGrid.setRowActionsStyle(RowActionsStyle.DROPDOWN);
+
+// ...or as the grid's right-click context menu (no actions column)
+easyGrid.setRowActionsStyle(RowActionsStyle.CONTEXT_MENU);
 
 // Conditional visibility
 easyGrid.addRowAction("Activate", VaadinIcon.CHECK, person -> {
@@ -209,7 +212,10 @@ easyGrid.setDefaultRowActionVariants(ButtonVariant.LUMO_SMALL, ButtonVariant.LUM
 easyGrid.addRowAction("Reset", person -> reset(person))
     .addClassName("warning");
 
-// Configure the actions column via the underlying Grid.Column
+// Configure the actions column via the underlying Grid.Column.
+// Available for the INLINE_BUTTONS and DROPDOWN styles. With the CONTEXT_MENU
+// style there is no actions column and getActionsColumn() returns null, so the
+// chain below would throw a NullPointerException.
 easyGrid.getActionsColumn()
     .setHeader("Actions")
     .setWidth("150px")

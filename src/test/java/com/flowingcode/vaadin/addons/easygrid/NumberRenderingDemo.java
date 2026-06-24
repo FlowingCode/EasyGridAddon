@@ -28,6 +28,11 @@ import com.vaadin.flow.router.Route;
 import java.math.BigDecimal;
 import java.util.List;
 
+/**
+ * Demo view showing number rendering for various numeric types.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @DemoSource(clazz = NumberSample.class)
 @PageTitle("Number Rendering")

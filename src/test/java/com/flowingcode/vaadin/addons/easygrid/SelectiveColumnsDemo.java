@@ -28,6 +28,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import lombok.Getter;
 
+/**
+ * Demo view showing selective column creation and reordering.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Selective Columns")
 @SuppressWarnings("serial")

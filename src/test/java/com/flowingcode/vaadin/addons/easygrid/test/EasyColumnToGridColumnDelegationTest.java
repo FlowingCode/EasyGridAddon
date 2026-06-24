@@ -43,6 +43,7 @@ import org.junit.runners.Parameterized.Parameters;
  * asserts that the setter was called on the mock with the expected arguments.
  *
  * @see DelegationTest
+ * @author Javier Godoy / Flowing Code
  */
 public class EasyColumnToGridColumnDelegationTest extends DelegationTest {
 

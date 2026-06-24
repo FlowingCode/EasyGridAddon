@@ -28,6 +28,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import lombok.Getter;
 
+/**
+ * Demo view showing default type-driven rendering.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Type Rendering")
 @SuppressWarnings("serial")

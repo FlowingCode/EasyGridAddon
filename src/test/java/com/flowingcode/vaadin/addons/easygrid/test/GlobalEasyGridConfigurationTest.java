@@ -27,6 +27,11 @@ import com.vaadin.flow.component.grid.ColumnTextAlign;
 import java.lang.reflect.Method;
 import org.junit.Test;
 
+/**
+ * Tests for GlobalEasyGridConfiguration.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class GlobalEasyGridConfigurationTest {
 
   @SuppressWarnings("unchecked")

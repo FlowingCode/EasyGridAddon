@@ -40,6 +40,7 @@ import lombok.experimental.Accessors;
  * non-{@code null}, otherwise delegates to the parent.
  *
  * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 @Setter

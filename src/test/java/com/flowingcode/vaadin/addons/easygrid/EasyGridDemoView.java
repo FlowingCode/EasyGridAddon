@@ -26,6 +26,11 @@ import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.router.ParentLayout;
 import com.vaadin.flow.router.Route;
 
+/**
+ * Main demo view for EasyGrid add-on.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @SuppressWarnings("serial")
 @ParentLayout(DemoLayout.class)
 @Route("easy-grid")
@@ -41,6 +46,9 @@ public class EasyGridDemoView extends TabbedDemo {
     addDemo(ColumnConfigurationDemo.class);
     addDemo(ConfigurationHierarchyDemo.class);
     addDemo(TypedColumnDemo.class);
+    addDemo(RowActionsDemo.class);
+    addDemo(RowActionsMenuDemo.class);
+    addDemo(RowActionsDynamicDemo.class);
     setSizeFull();
   }
 }

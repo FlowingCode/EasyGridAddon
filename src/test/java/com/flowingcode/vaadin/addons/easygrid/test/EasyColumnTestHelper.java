@@ -27,6 +27,11 @@ import com.vaadin.flow.function.ValueProvider;
 import java.lang.reflect.Constructor;
 import org.mockito.Mockito;
 
+/**
+ * Helper class for EasyColumn tests.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 final class EasyColumnTestHelper {
 
   private EasyColumnTestHelper() {}

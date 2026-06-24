@@ -23,6 +23,11 @@ import com.flowingcode.vaadin.addons.easygrid.data.PersonData;
 import com.flowingcode.vaadin.addons.easygrid.model.Person;
 import java.util.List;
 
+/**
+ * Service for managing Person data.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class PersonService {
 
   private final PersonData personData = new PersonData();

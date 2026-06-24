@@ -31,7 +31,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-/** Verifies {@link GlobalEasyGridConfiguration#freeze()} behaviour. */
+/**
+ * Verifies {@link GlobalEasyGridConfiguration#freeze()} behaviour.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class GlobalEasyGridConfigurationFreezeTest {
 
   private static void setFrozen(boolean value) throws ReflectiveOperationException {

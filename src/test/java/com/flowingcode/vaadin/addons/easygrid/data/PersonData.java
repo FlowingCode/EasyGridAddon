@@ -29,6 +29,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Generates test data for Person entities.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class PersonData {
 
   private final List<Person> people = new ArrayList<>();

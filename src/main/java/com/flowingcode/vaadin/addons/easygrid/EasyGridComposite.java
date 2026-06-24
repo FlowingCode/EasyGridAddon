@@ -43,6 +43,7 @@ import lombok.experimental.Delegate;
  *
  * @param <T> the grid bean type
  * @param <GRID> the concrete {@code Grid} subtype being wrapped
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 class EasyGridComposite<T, GRID extends Grid<T>> extends Composite<GRID>

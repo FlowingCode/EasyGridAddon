@@ -50,6 +50,7 @@ import java.util.Set;
  * type argument for Lombok {@code @Delegate} on the {@link EasyGridComposite.IEasyGridDelegate} inner class.
  *
  * @param <T> the grid bean type
+ * @author Javier Godoy / Flowing Code
  */
 public sealed interface IEasyGridComposite<T> permits EasyGridComposite.IEasyGridDelegate {
 

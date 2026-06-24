@@ -28,6 +28,7 @@ import lombok.NonNull;
  * internally. This is the standard entry point for using the Easy Grid Add-on.
  *
  * @param <T> the grid bean type
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 public class EasyGrid<T> extends EasyGridWrapper<T, Grid<T>> {

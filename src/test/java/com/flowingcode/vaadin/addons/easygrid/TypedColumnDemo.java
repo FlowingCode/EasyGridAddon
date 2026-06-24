@@ -31,6 +31,11 @@ import java.time.MonthDay;
 import java.time.temporal.ChronoUnit;
 import lombok.Getter;
 
+/**
+ * Demo view showing typed column support for computed values.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Typed Column")
 @SuppressWarnings("serial")

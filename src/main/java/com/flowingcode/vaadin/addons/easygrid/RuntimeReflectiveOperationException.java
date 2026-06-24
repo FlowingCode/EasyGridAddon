@@ -22,6 +22,8 @@ package com.flowingcode.vaadin.addons.easygrid;
 /**
  * Unchecked wrapper for {@link ReflectiveOperationException}, used to propagate reflective errors
  * without requiring callers to declare or catch checked exceptions.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 public class RuntimeReflectiveOperationException extends RuntimeException {
 

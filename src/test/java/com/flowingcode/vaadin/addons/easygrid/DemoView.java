@@ -25,6 +25,11 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 
+/**
+ * Entry point demo view that forwards to the EasyGridDemoView.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @SuppressWarnings("serial")
 @Route("")
 public class DemoView extends VerticalLayout implements BeforeEnterObserver {

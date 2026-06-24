@@ -28,6 +28,8 @@ import lombok.experimental.UtilityClass;
 /**
  * Factory methods for creating {@link RendererFactory} instances that render {@link Number} values
  * using {@link com.vaadin.flow.data.renderer.NumberRenderer}.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @UtilityClass
 public class NumberRenderers {

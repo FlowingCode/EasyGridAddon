@@ -26,6 +26,11 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.component.Component;
 import org.junit.Test;
 
+/**
+ * Tests for instance-level formatter null representation handling.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class InstanceFormatterNullRepresentationTest {
 
   /**

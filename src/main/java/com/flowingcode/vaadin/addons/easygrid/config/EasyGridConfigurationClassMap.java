@@ -28,6 +28,8 @@ import java.util.Optional;
  * A map from value type to {@link ColumnConfiguration}, building a parent chain by following the
  * class hierarchy so that a configuration for a subtype inherits from its supertype's configuration.
  * Primitive types are mapped to their wrapper counterparts before hierarchy traversal.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 final class EasyGridConfigurationClassMap implements Serializable {

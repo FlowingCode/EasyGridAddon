@@ -39,6 +39,7 @@ import lombok.RequiredArgsConstructor;
  *
  * @param <T> the bean type
  * @param <V> the property value type
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)

@@ -29,6 +29,7 @@ import com.vaadin.flow.function.ValueProvider;
  *
  * @param <T> the grid bean type
  * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 @FunctionalInterface
 public interface RendererFactory<T, V> extends SerializableFunction<ValueProvider<T, V>, Renderer<T>> {

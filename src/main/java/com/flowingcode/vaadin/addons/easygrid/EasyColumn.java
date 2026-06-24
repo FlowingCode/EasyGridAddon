@@ -38,6 +38,7 @@ import lombok.Getter;
  *
  * @param <T> the grid bean type
  * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 public final class EasyColumn<T, V> implements IEasyGridColumn<T, V>, Serializable {

@@ -30,6 +30,11 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import lombok.Getter;
 
+/**
+ * Demo view showing configuration hierarchy and precedence.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Configuration Hierarchy")
 @SuppressWarnings("serial")

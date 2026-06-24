@@ -31,6 +31,11 @@ import java.util.Locale;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+/**
+ * Tests for EasyGrid serialization.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class SerializationTest {
 
   private void testSerializationOf(Object obj) throws IOException, ClassNotFoundException {

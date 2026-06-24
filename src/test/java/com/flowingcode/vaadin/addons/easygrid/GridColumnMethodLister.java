@@ -37,6 +37,8 @@ import java.util.stream.Collectors;
  *
  * <p>Run via {@code mvn exec:java -Dexec.mainClass=...GridColumnMethodLister} or directly from an
  * IDE.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 public class GridColumnMethodLister {
 

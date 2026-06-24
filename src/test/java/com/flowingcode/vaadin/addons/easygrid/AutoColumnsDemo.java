@@ -27,6 +27,11 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+/**
+ * Demo view showing automatic column discovery.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Auto Column Discovery")
 @SuppressWarnings("serial")

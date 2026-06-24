@@ -39,6 +39,8 @@ import org.mockito.Mockito;
  * link must fall back to the fallback config; and once with the primary stubbed to return a
  * non-{@code null} value, in which case the fallback must not be called. For non-getter methods,
  * no interaction with the fallback is expected.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 public class ColumnConfigurationLinkDelegationTest extends DelegationTest {
 

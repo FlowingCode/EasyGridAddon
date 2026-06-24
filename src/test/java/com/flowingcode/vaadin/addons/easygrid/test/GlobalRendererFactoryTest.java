@@ -30,6 +30,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import org.junit.Test;
 
+/**
+ * Tests for global renderer factory configuration.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class GlobalRendererFactoryTest {
 
   @Test

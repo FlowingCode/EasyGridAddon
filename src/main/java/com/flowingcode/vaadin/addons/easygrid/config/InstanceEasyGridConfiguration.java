@@ -28,6 +28,8 @@ import java.io.Serializable;
  * {@link GlobalEasyGridConfiguration}.
  *
  * <p>See {@link #resolve(Class)} for the full resolution order.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 public final class InstanceEasyGridConfiguration implements Serializable {

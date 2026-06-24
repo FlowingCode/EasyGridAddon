@@ -29,6 +29,8 @@ import lombok.experimental.UtilityClass;
 /**
  * Factory methods for creating {@link RendererFactory} instances that render {@link LocalTime}
  * values using {@link TextRenderer} and {@link DateTimeFormatter}.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @UtilityClass
 public class LocalTimeRenderers {

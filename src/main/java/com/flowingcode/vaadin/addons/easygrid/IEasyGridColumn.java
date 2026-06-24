@@ -39,6 +39,7 @@ import java.util.Comparator;
  *
  * @param <T> the grid bean type
  * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 sealed interface IEasyGridColumn<T, V> permits EasyColumn {
 

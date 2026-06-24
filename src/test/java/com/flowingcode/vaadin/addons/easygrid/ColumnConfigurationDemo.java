@@ -33,6 +33,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.Getter;
 
+/**
+ * Demo view showing column configuration options.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @DemoSource
 @PageTitle("Column Configuration")
 @SuppressWarnings("serial")

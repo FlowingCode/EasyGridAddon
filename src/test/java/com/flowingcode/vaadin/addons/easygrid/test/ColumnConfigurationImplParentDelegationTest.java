@@ -36,6 +36,8 @@ import org.mockito.Mockito;
  * <p>Methods are discovered reflectively from {@link ColumnConfiguration}. Getters (names starting
  * with {@code "get"}) are verified to call through to the parent; all other public methods are
  * verified to call only getter methods on the parent (never setters).
+ *
+ * @author Javier Godoy / Flowing Code
  */
 public class ColumnConfigurationImplParentDelegationTest extends DelegationTest {
 

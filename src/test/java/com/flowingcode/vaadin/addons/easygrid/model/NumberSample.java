@@ -23,6 +23,11 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import lombok.Getter;
 
+/**
+ * Sample entity with various numeric types for testing.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @Getter
 public class NumberSample {
 

@@ -29,6 +29,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Person entity model.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter

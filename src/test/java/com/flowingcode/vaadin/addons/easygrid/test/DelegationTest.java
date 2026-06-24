@@ -53,6 +53,8 @@ import org.mockito.Mockito;
  * {@link #createDelegate()}, {@link #createTarget(Object)},
  * {@link #buildArg(Class, int)}, and {@link #assertDelegated(Object, String, Object[])}.</li>
  * </ul>
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @RunWith(Parameterized.class)
 public abstract class DelegationTest {

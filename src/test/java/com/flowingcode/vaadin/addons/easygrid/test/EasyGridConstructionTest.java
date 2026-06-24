@@ -38,6 +38,11 @@ import org.junit.After;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+/**
+ * Tests for EasyGrid construction and column management.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 public class EasyGridConstructionTest {
 
   @After

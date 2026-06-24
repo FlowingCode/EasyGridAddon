@@ -25,6 +25,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Address entity model.
+ *
+ * @author Javier Godoy / Flowing Code
+ */
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter

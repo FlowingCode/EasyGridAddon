@@ -31,6 +31,9 @@ import lombok.RequiredArgsConstructor;
  * A {@code ColumnConfiguration} that delegates reads to a primary configuration and, when the
  * primary returns {@code null} for a given property, falls back to a secondary configuration.
  * Writes (setters) are always forwarded to the primary and return {@code this} for fluent chaining.
+ *
+ * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 @SuppressWarnings("serial")
 @RequiredArgsConstructor(access = AccessLevel.PACKAGE)

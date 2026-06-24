@@ -30,6 +30,7 @@ import java.io.Serializable;
  * that non-{@code null} values at a more specific level take precedence over less specific ones.
  *
  * @param <V> the column value type
+ * @author Javier Godoy / Flowing Code
  */
 public sealed interface ColumnConfiguration<V> extends Serializable
     permits ColumnConfigurationImpl, ColumnConfigurationLink {

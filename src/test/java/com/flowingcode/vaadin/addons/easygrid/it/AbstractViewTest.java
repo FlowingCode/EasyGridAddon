@@ -25,6 +25,7 @@ import com.vaadin.testbench.TestBench;
 import com.vaadin.testbench.parallel.ParallelTest;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.util.concurrent.Semaphore;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -47,6 +48,7 @@ public abstract class AbstractViewTest extends ParallelTest {
   private static final int SERVER_PORT = 8080;
 
   private final String route;
+  private boolean semaphoreAcquired = false;
 
   @Rule public ScreenshotOnFailureRule rule = new ScreenshotOnFailureRule(this, true);
 
@@ -65,20 +67,24 @@ public abstract class AbstractViewTest extends ParallelTest {
 
   private final static Semaphore semaphore = new Semaphore(4);
 
-  @Override
   @Before
   public void setup() throws Exception {
     semaphore.acquire();
-    try {
-      if (isUsingHub()) {
-        super.setup();
-      } else {
-        setDriver(TestBench.createDriver(new ChromeDriver()));
-      }
-      getDriver().get(getURL(route));
-      getCommandExecutor().waitForVaadin();
-    } finally {
+    semaphoreAcquired = true;
+    if (isUsingHub()) {
+      super.setup();
+    } else {
+      setDriver(TestBench.createDriver(new ChromeDriver()));
+    }
+    getDriver().get(getURL(route));
+    getCommandExecutor().waitForVaadin();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    if (semaphoreAcquired) {
       semaphore.release();
+      semaphoreAcquired = false;
     }
   }
 

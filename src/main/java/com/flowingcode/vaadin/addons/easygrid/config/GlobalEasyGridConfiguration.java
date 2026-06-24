@@ -49,6 +49,8 @@ import lombok.experimental.UtilityClass;
  * post-startup modifications. Omitting {@link #freeze()} is a stability risk: any code that runs
  * after startup — including request-handling code — could inadvertently alter rendering for every
  * active session.
+ *
+ * @author Javier Godoy / Flowing Code
  */
 @UtilityClass
 public class GlobalEasyGridConfiguration {

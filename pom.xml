@@ -490,6 +490,7 @@
                                         <exclude>**/DemoView.class</exclude>
                                         <exclude>**/DemoLayout.class</exclude>
                                         <exclude>**/AppShellConfiguratorImpl.class</exclude>
+                                        <exclude>META-INF/services/com.vaadin.flow.server.VaadinServiceInitListener</exclude>
                                     </excludes>
                                 </configuration>
                             </execution>

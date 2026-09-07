@@ -4,7 +4,7 @@
 
     <groupId>com.flowingcode.vaadin.addons</groupId>
     <artifactId>easy-grid-addon</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Easy Grid Add-on</name>
     <description>Easy Grid Add-on for Vaadin Flow</description>
     <url>https://www.flowingcode.com/en/open-source/</url>
@@ -39,7 +39,7 @@
         <url>https://github.com/FlowingCode/EasyGridAddon</url>
         <connection>scm:git:git://github.com/FlowingCode/EasyGridAddon.git</connection>
         <developerConnection>scm:git:ssh://git@github.com:/FlowingCode/EasyGridAddon.git</developerConnection>
-        <tag>1.0.0</tag>
+        <tag>master</tag>
     </scm>
 
     <developers>

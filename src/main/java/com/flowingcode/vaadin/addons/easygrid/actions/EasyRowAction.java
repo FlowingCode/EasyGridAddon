@@ -289,7 +289,13 @@ public final class EasyRowAction<T>
         return;
       }
       confirmPending = true;
-      ConfirmDialog dialog = getConfirmDialog(item);
+      ConfirmDialog dialog;
+      try {
+        dialog = getConfirmDialog(item);
+      } catch (RuntimeException ex) {
+        confirmPending = false;
+        throw ex;
+      }
       dialog.addConfirmListener(e -> {
         if (isVisible(item) && isEnabled(item)) {
           actionHandler.accept(item);

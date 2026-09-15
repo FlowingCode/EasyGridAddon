@@ -34,7 +34,6 @@ import com.vaadin.flow.component.grid.testbench.GridElement;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.testbench.ElementQuery;
 import com.vaadin.testbench.TestBenchElement;
-import java.time.Duration;
 import java.util.List;
 import lombok.experimental.ExtensionMethod;
 import org.junit.Before;
@@ -42,8 +41,6 @@ import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 
 class ElementQueryExtension {
   public static <T extends TestBenchElement> T waitForSingle(ElementQuery<T> q) {
@@ -193,6 +190,12 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     assertEquals(Integer.valueOf(2), $server.getClickedValue()); // unchanged
   }
 
+  // Waits until the confirmation dialog is gone, so that a subsequent click does not observe the
+  // dialog that is still closing.
+  private void waitForNoConfirmDialog() {
+    waitUntil(d -> $(ConfirmDialogElement.class).all().isEmpty());
+  }
+
   @Test
   public void testConfirmation() {
     var action = $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(1));
@@ -215,6 +218,29 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     $(ConfirmDialogElement.class).waitForSingle(); // ensure dialog is open
     grid.getCell(0, 1).$("vaadin-button").single().click();
     assertEquals(1, $(ConfirmDialogElement.class).all().size());
+  }
+
+  @Test
+  public void testDynamicConfirmation() {
+    var action = $server.addRowAction(VaadinIcon.VAADIN_H, $server.action(1));
+    action.withConfirmation("Confirm", x -> "Delete item " + x + "?");
+
+    // the dialog message is computed from the clicked row (row 0 = item 1)
+    grid.getCell(0, 1).$("vaadin-button").single().click();
+    var dialog = $(ConfirmDialogElement.class).waitForSingle();
+    assertEquals("Confirm", dialog.getHeaderText());
+    assertEquals("Delete item 1?", dialog.getMessageText());
+    dialog.getCancelButton().click();
+
+    waitForNoConfirmDialog();
+
+    // a different row yields a different message (row 1 = item 2)
+    grid.getCell(1, 1).$("vaadin-button").single().click();
+    dialog = $(ConfirmDialogElement.class).waitForSingle();
+    assertEquals("Confirm", dialog.getHeaderText());
+    assertEquals("Delete item 2?", dialog.getMessageText());
+    dialog.getConfirmButton().click();
+    assertEquals(Integer.valueOf(2), $server.getClickedValue());
   }
 
   @Test
@@ -278,10 +304,7 @@ public class EasyRowActionIT extends AbstractViewTest implements HasRpcSupport {
     dialog.getCancelButton().click();
     assertNull($server.getClickedValue());
 
-    new WebDriverWait(getDriver(),
-        Duration.ofSeconds(1))
-            .until(ExpectedConditions
-                .numberOfElementsToBe(By.tagName("vaadin-confirm-dialog-overlay"), 0));
+    waitForNoConfirmDialog();
 
     // selecting it again and confirming fires the handler (row 0 = item 1)
     grid.getCell(0, 0).contextClick();

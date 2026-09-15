@@ -29,8 +29,8 @@ import com.vaadin.flow.component.icon.AbstractIcon;
 import com.vaadin.flow.component.shared.HasThemeVariant;
 import com.vaadin.flow.dom.Element;
 import com.vaadin.flow.function.SerializableConsumer;
+import com.vaadin.flow.function.SerializableFunction;
 import com.vaadin.flow.function.SerializablePredicate;
-import com.vaadin.flow.function.SerializableSupplier;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -126,7 +126,7 @@ public final class EasyRowAction<T>
   private SerializablePredicate<T> visibleWhen;
   private SerializablePredicate<T> enabledWhen;
   private ValueProvider<T, String> tooltipProvider;
-  private SerializableSupplier<ConfirmDialog> confirmDialogSupplier;
+  private SerializableFunction<T, ConfirmDialog> confirmDialogFactory;
   private transient boolean confirmPending;
 
   private void refresh() {
@@ -203,15 +203,28 @@ public final class EasyRowAction<T>
    * @return this action, for method chaining
    */
   public EasyRowAction<T> withConfirmation(String title, String message) {
-    return withConfirmation(title, message, "Ok", "Cancel");
+    return withConfirmation(title, Constant.of(message), "Ok", "Cancel");
   }
 
-  private EasyRowAction<T> withConfirmation(String title, String message, String confirmText,
-      String cancelText) {
-    confirmDialogSupplier = () -> {
+  /**
+   * Configures a confirmation dialog with a static title, whose message is computed from the row
+   * item when the action is clicked.
+   *
+   * @param title the dialog title
+   * @param messageProvider a function that returns the confirmation message for a given row item
+   * @return this action, for method chaining
+   */
+  public EasyRowAction<T> withConfirmation(String title,
+      @NonNull ValueProvider<T, String> messageProvider) {
+    return withConfirmation(title, messageProvider, "Ok", "Cancel");
+  }
+
+  private EasyRowAction<T> withConfirmation(String title,
+      ValueProvider<T, String> messageProvider, String confirmText, String cancelText) {
+    confirmDialogFactory = item -> {
       var dialog = new ConfirmDialog();
       dialog.setHeader(title);
-      dialog.setText(message);
+      dialog.setText(messageProvider.apply(item));
       dialog.setConfirmText(confirmText);
       dialog.setCancelable(true);
       dialog.setCancelText(cancelText);
@@ -253,6 +266,15 @@ public final class EasyRowAction<T>
     return iconProvider != null ? iconProvider.apply(item) : null;
   }
 
+  /**
+   * Builds the confirmation dialog for the given row item, or returns {@code null} when no
+   * confirmation is configured. The dialog is created on every call, since its message may be
+   * derived from the item.
+   */
+  ConfirmDialog getConfirmDialog(T item) {
+    return confirmDialogFactory != null ? confirmDialogFactory.apply(item) : null;
+  }
+
   void execute(T item) {
     // Server-side guard: reject the click if the item no longer satisfies visibleWhen/enabledWhen.
     // The client-side conditional rendering and ?disabled binding prevent most clicks, but this
@@ -261,13 +283,19 @@ public final class EasyRowAction<T>
     if (!isVisible(item) || !isEnabled(item)) {
       return;
     }
-    if (confirmDialogSupplier != null) {
+    if (confirmDialogFactory != null) {
       // Prevent multiple dialogs from stacking on rapid clicks.
       if (confirmPending) {
         return;
       }
       confirmPending = true;
-      ConfirmDialog dialog = confirmDialogSupplier.get();
+      ConfirmDialog dialog;
+      try {
+        dialog = getConfirmDialog(item);
+      } catch (RuntimeException ex) {
+        confirmPending = false;
+        throw ex;
+      }
       dialog.addConfirmListener(e -> {
         if (isVisible(item) && isEnabled(item)) {
           actionHandler.accept(item);

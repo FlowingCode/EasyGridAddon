@@ -28,10 +28,12 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.confirmdialog.ConfirmDialog;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.function.SerializableConsumer;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.Test;
 
@@ -217,6 +219,72 @@ public class EasyRowActionTest {
     assertEquals(
         "<vaadin-button title=\"Provider tooltip\" @click=${actionsHandler0}>${`X`}</vaadin-button>",
         templateFor(action));
+  }
+
+  // --- confirmation dialog contents ---
+  // The dialog is built at click time, so its title and message are read back from the
+  // ConfirmDialog element properties that setHeader/setText write.
+
+  private static String headerOf(ConfirmDialog dialog) {
+    return dialog.getElement().getProperty("header");
+  }
+
+  private static String messageOf(ConfirmDialog dialog) {
+    return dialog.getElement().getProperty("message");
+  }
+
+  @Test
+  public void withConfirmation_noConfirmation_hasNoDialog() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    assertNull(action.getConfirmDialog(7));
+  }
+
+  @Test
+  public void withConfirmation_message_setsMessageAndNoHeader() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Proceed?");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertNull(headerOf(dialog));
+    assertEquals("Proceed?", messageOf(dialog));
+  }
+
+  @Test
+  public void withConfirmation_titleAndMessage_setsHeaderAndMessage() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", "Proceed?");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertEquals("Confirm", headerOf(dialog));
+    assertEquals("Proceed?", messageOf(dialog));
+  }
+
+  @Test
+  public void withConfirmation_nullTitleAndMessageProvider_derivesMessageAndHasNoHeader() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation(null, item -> "Delete item " + item + "?");
+    assertNull(headerOf(action.getConfirmDialog(7)));
+    assertEquals("Delete item 7?", messageOf(action.getConfirmDialog(7)));
+    assertEquals("Delete item 8?", messageOf(action.getConfirmDialog(8)));
+  }
+
+  @Test
+  public void withConfirmation_titleAndMessageProvider_derivesMessageFromItem() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", item -> "Delete item " + item + "?");
+    assertEquals("Confirm", headerOf(action.getConfirmDialog(7)));
+    assertEquals("Delete item 7?", messageOf(action.getConfirmDialog(7)));
+    assertEquals("Confirm", headerOf(action.getConfirmDialog(8)));
+    assertEquals("Delete item 8?", messageOf(action.getConfirmDialog(8)));
+  }
+
+  @Test
+  public void withConfirmation_providerIsEvaluatedPerDialog() {
+    var count = new AtomicInteger();
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", item -> "Message " + count.incrementAndGet());
+    // The provider is not consulted while configuring the action, only when a dialog is built.
+    assertEquals(0, count.get());
+    assertEquals("Message 1", messageOf(action.getConfirmDialog(7)));
+    assertEquals("Message 2", messageOf(action.getConfirmDialog(7)));
   }
 
   // --- execute: server-side enabledWhen guard ---

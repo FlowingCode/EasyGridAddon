@@ -23,6 +23,7 @@ import com.flowingcode.vaadin.addons.easygrid.actions.EasyRowAction;
 import com.flowingcode.vaadin.testbench.rpc.RmiRemote;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.function.SerializablePredicate;
+import com.vaadin.flow.function.ValueProvider;
 
 /**
  * RMI interface for EasyRowAction proxying in integration tests.
@@ -37,6 +38,8 @@ public interface RmiEasyRowAction<T> extends RmiRemote {
   RmiEasyRowAction<T> enabledWhen(SerializablePredicate<T> predicate);
 
   RmiEasyRowAction<T> withConfirmation(String title, String message);
+
+  RmiEasyRowAction<T> withConfirmation(String title, ValueProvider<T, String> messageProvider);
 
   RmiEasyRowAction<T> addThemeVariants(ButtonVariant variant);
 
@@ -59,6 +62,13 @@ public interface RmiEasyRowAction<T> extends RmiRemote {
       @Override
       public RmiEasyRowAction<T> withConfirmation(String title, String message) {
         action.withConfirmation(title, message);
+        return this;
+      }
+
+      @Override
+      public RmiEasyRowAction<T> withConfirmation(String title,
+          ValueProvider<T, String> messageProvider) {
+        action.withConfirmation(title, messageProvider);
         return this;
       }
 

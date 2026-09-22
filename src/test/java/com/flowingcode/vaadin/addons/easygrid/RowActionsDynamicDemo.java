@@ -56,6 +56,10 @@ public class RowActionsDynamicDemo extends Div {
         Notification.show("Delete: " + person.getFirstName() + " " + person.getLastName()));
     deleteAction.addThemeVariants(ButtonVariant.LUMO_ERROR);
 
+    // The confirmation message is computed from the row item when the button is clicked.
+    deleteAction.withConfirmation("Delete person", person -> "Are you sure you want to delete "
+        + person.getFirstName() + " " + person.getLastName() + "?");
+
     // Fluent mutators like visibleWhen automatically refresh the grid.
     var restrictCheckbox = new Checkbox("Show edit only for active persons");
     restrictCheckbox.addValueChangeListener(e -> {

@@ -139,6 +139,11 @@ EasyRowAction<T> withConfirmation(String title, String message);
 ```
 Intercepts button clicks and presents a confirmation dialog before invoking the action handler. The handler is only called if the user confirms. `message` is the confirmation prompt shown to the user; the optional `title` sets the dialog heading.
 
+```java
+EasyRowAction<T> withConfirmation(String title, ValueProvider<T, String> messageProvider);
+```
+The same, with the message resolved per row: `messageProvider` is called with the clicked row item while the dialog is being built, so the prompt can name the affected item. Pass a `null` `title` to show the dialog without a heading.
+
 ---
 
 #### Styling and theme variants

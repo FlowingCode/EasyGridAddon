@@ -142,7 +142,7 @@ Intercepts button clicks and presents a confirmation dialog before invoking the 
 ```java
 EasyRowAction<T> withConfirmation(String title, ValueProvider<T, String> messageProvider);
 ```
-The same, with the message resolved per row: `messageProvider` is called with the clicked row item while the dialog is being built, so the prompt can name the affected item.
+The same, with the message resolved per row: `messageProvider` is called with the clicked row item while the dialog is being built, so the prompt can name the affected item. Pass a `null` `title` to show the dialog without a heading.
 
 ---
 

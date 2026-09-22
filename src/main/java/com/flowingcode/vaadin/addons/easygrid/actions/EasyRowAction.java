@@ -210,7 +210,7 @@ public final class EasyRowAction<T>
    * Configures a confirmation dialog with a static title, whose message is computed from the row
    * item when the action is clicked.
    *
-   * @param title the dialog title
+   * @param title the dialog title, or {@code null} for a dialog without a heading
    * @param messageProvider a function that returns the confirmation message for a given row item
    * @return this action, for method chaining
    */

@@ -289,36 +289,37 @@ public final class EasyRowAction<T>
         return;
       }
       confirmPending = true;
-      ConfirmDialog dialog;
+      // Reset the flag if building, wiring, or opening the dialog fails; otherwise the action
+      // would stay blocked for the rest of the session.
       try {
-        dialog = getConfirmDialog(item);
+        ConfirmDialog dialog = getConfirmDialog(item);
+        dialog.addConfirmListener(e -> {
+          if (isVisible(item) && isEnabled(item)) {
+            actionHandler.accept(item);
+          }
+        });
+        // Reset on any close path: confirm, cancel, or programmatic dialog.close()
+        if (ADD_OPENED_CHANGE_LISTENER != null) {
+          @SuppressWarnings({"rawtypes"})
+          ComponentEventListener l = e -> {
+            if (!dialog.isOpened()) {
+              confirmPending = false;
+            }
+          };
+          try {
+            ADD_OPENED_CHANGE_LISTENER.invoke(dialog, l);
+          } catch (ReflectiveOperationException ex) {
+            throw new RuntimeReflectiveOperationException(ex);
+          }
+        } else {
+          dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
+              .setFilter("event.detail.value === false");
+        }
+        dialog.open();
       } catch (RuntimeException ex) {
         confirmPending = false;
         throw ex;
       }
-      dialog.addConfirmListener(e -> {
-        if (isVisible(item) && isEnabled(item)) {
-          actionHandler.accept(item);
-        }
-      });
-      // Reset on any close path: confirm, cancel, or programmatic dialog.close()
-      if (ADD_OPENED_CHANGE_LISTENER != null) {
-        @SuppressWarnings({"rawtypes"})
-        ComponentEventListener l = e -> {
-          if (!dialog.isOpened()) {
-            confirmPending = false;
-          }
-        };
-        try {
-          ADD_OPENED_CHANGE_LISTENER.invoke(dialog, l);
-        } catch (ReflectiveOperationException ex) {
-          throw new RuntimeReflectiveOperationException(ex);
-        }
-      } else {
-        dialog.getElement().addEventListener("opened-changed", e -> confirmPending = false)
-            .setFilter("event.detail.value === false");
-      }
-      dialog.open();
     } else {
       actionHandler.accept(item);
     }

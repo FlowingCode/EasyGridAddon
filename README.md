@@ -2,6 +2,7 @@
 [![Stars on vaadin.com/directory](https://img.shields.io/vaadin-directory/star/easy-grid-add-on.svg)](https://vaadin.com/directory/component/easy-grid-add-on)
 [![Build Status](https://jenkins.flowingcode.com/job/EasyGrid-addon/badge/icon)](https://jenkins.flowingcode.com/job/EasyGrid-addon)
 [![Maven Central](https://img.shields.io/maven-central/v/com.flowingcode.vaadin.addons/easy-grid-addon)](https://mvnrepository.com/artifact/com.flowingcode.vaadin.addons/easy-grid-addon)
+[![Javadoc](https://img.shields.io/badge/javadoc-00b4f0)](https://javadoc.flowingcode.com/artifact/com.flowingcode.vaadin.addons/easy-grid-addon)
 
 # Easy Grid Add-On
 

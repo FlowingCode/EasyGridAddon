@@ -222,8 +222,8 @@ public class EasyRowActionTest {
   }
 
   // --- confirmation dialog contents ---
-  // The dialog is built at click time, so its title and message are read back from the
-  // ConfirmDialog element properties that setHeader/setText write.
+  // The dialog is built at click time, so its texts are read back from the ConfirmDialog
+  // element properties that setHeader/setText/setConfirmText/setCancelText write.
 
   private static String headerOf(ConfirmDialog dialog) {
     return dialog.getElement().getProperty("header");
@@ -231,6 +231,14 @@ public class EasyRowActionTest {
 
   private static String messageOf(ConfirmDialog dialog) {
     return dialog.getElement().getProperty("message");
+  }
+
+  private static String confirmTextOf(ConfirmDialog dialog) {
+    return dialog.getElement().getProperty("confirmText");
+  }
+
+  private static String cancelTextOf(ConfirmDialog dialog) {
+    return dialog.getElement().getProperty("cancelText");
   }
 
   @Test
@@ -285,6 +293,61 @@ public class EasyRowActionTest {
     assertEquals(0, count.get());
     assertEquals("Message 1", messageOf(action.getConfirmDialog(7)));
     assertEquals("Message 2", messageOf(action.getConfirmDialog(7)));
+  }
+
+  @Test
+  public void withConfirmation_defaultButtonTexts() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", "Proceed?");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertEquals("Ok", confirmTextOf(dialog));
+    assertEquals("Cancel", cancelTextOf(dialog));
+  }
+
+  @Test
+  public void withConfirmation_titleMessageAndButtonTexts_setsAllTexts() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", "Proceed?", "Yes", "No");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertEquals("Confirm", headerOf(dialog));
+    assertEquals("Proceed?", messageOf(dialog));
+    assertEquals("Yes", confirmTextOf(dialog));
+    assertEquals("No", cancelTextOf(dialog));
+  }
+
+  @Test
+  public void withConfirmation_nullTitleMessageAndButtonTexts_hasNoHeader() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation(null, "Proceed?", "Yes", "No");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertNull(headerOf(dialog));
+    assertEquals("Proceed?", messageOf(dialog));
+    assertEquals("Yes", confirmTextOf(dialog));
+    assertEquals("No", cancelTextOf(dialog));
+  }
+
+  @Test
+  public void withConfirmation_messageProviderAndButtonTexts_setsAllTexts() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Delete", item -> "Delete item " + item + "?", "Delete", "Keep");
+    ConfirmDialog dialog = action.getConfirmDialog(7);
+    assertEquals("Delete", headerOf(dialog));
+    assertEquals("Delete item 7?", messageOf(dialog));
+    assertEquals("Delete", confirmTextOf(dialog));
+    assertEquals("Keep", cancelTextOf(dialog));
+    assertEquals("Delete item 8?", messageOf(action.getConfirmDialog(8)));
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void withConfirmation_nullConfirmText_throws() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", "Proceed?", null, "Cancel");
+  }
+
+  @Test(expected = NullPointerException.class)
+  public void withConfirmation_nullCancelText_throws() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.withConfirmation("Confirm", item -> "Proceed?", "Ok", null);
   }
 
   // --- execute: server-side enabledWhen guard ---

@@ -219,8 +219,34 @@ public final class EasyRowAction<T>
     return withConfirmation(title, messageProvider, "Ok", "Cancel");
   }
 
-  private EasyRowAction<T> withConfirmation(String title,
-      ValueProvider<T, String> messageProvider, String confirmText, String cancelText) {
+  /**
+   * Configures a confirmation dialog with a title, a message and custom texts for the confirm and
+   * cancel buttons before the action is executed.
+   *
+   * @param title the dialog title, or {@code null} for a dialog without a heading
+   * @param message the confirmation message
+   * @param confirmText the text of the confirm button
+   * @param cancelText the text of the cancel button
+   * @return this action, for method chaining
+   */
+  public EasyRowAction<T> withConfirmation(String title, String message,
+      @NonNull String confirmText, @NonNull String cancelText) {
+    return withConfirmation(title, Constant.of(message), confirmText, cancelText);
+  }
+
+  /**
+   * Configures a confirmation dialog with a static title and custom texts for the confirm and
+   * cancel buttons, whose message is computed from the row item when the action is clicked.
+   *
+   * @param title the dialog title, or {@code null} for a dialog without a heading
+   * @param messageProvider a function that returns the confirmation message for a given row item
+   * @param confirmText the text of the confirm button
+   * @param cancelText the text of the cancel button
+   * @return this action, for method chaining
+   */
+  public EasyRowAction<T> withConfirmation(String title,
+      @NonNull ValueProvider<T, String> messageProvider, @NonNull String confirmText,
+      @NonNull String cancelText) {
     confirmDialogFactory = item -> {
       var dialog = new ConfirmDialog();
       dialog.setHeader(title);

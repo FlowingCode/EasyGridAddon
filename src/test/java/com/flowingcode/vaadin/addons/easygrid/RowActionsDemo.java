@@ -66,7 +66,7 @@ public class RowActionsDemo extends Div {
         Notification.show("Deactivated: " + person.getFirstName() + " " + person.getLastName()))
         .visibleWhen(Person::isActive)
         .withConfirmation("Deactivate person",
-            "Are you sure you want to deactivate this person?")
+            "Are you sure you want to deactivate this person?", "Deactivate", "Keep active")
         .addThemeVariants(ButtonVariant.LUMO_ERROR);
 
     // Visible only for inactive persons

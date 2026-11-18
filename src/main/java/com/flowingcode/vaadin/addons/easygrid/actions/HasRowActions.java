@@ -210,9 +210,9 @@ public interface HasRowActions<T> {
 
   /**
    * Schedules a renderer rebuild on the next {@code beforeClientResponse} cycle. The fluent
-   * configuration methods of {@link EasyRowAction} ({@code visibleWhen}, {@code enabledWhen},
-   * {@code tooltip}, {@code withConfirmation}) schedule this automatically, so an explicit call is
-   * only needed after changing an action's styling or theme variants (e.g. {@code addClassName},
+   * configuration methods of {@link EasyRowAction} ({@code label}, {@code iconOnly},
+   * {@code visibleWhen}, {@code enabledWhen}, {@code tooltip}, {@code withConfirmation}) schedule
+   * this automatically, so an explicit call is only needed after changing an action's styling or theme variants (e.g. {@code addClassName},
    * {@code getStyle()}, {@code addThemeVariants}), which are not applied automatically. Any
    * previously scheduled rebuild is cancelled and replaced.
    */

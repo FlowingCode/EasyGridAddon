@@ -34,6 +34,8 @@ import com.vaadin.flow.function.SerializablePredicate;
 import com.vaadin.flow.function.ValueProvider;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +45,9 @@ import lombok.RequiredArgsConstructor;
  * inline buttons in a dedicated actions column or as items in a menu, depending on the grid's
  * {@link RowActionsStyle}.
  *
- * <p>Use the fluent methods to configure conditional visibility, conditional enablement, tooltips,
- * and optional confirmation dialogs before the action is executed. The rendered button can also be
- * styled and themed through the inherited {@link HasStyle} and {@link HasThemeVariant} methods.
+ * <p>Use the fluent methods to configure the label, conditional visibility, conditional
+ * enablement, tooltips, and optional confirmation dialogs before the action is executed. The
+ * rendered button can also be styled and themed through the inherited {@link HasStyle} and {@link HasThemeVariant} methods.
  *
  * @param <T> the grid bean type
  * @author Javier Godoy / Flowing Code
@@ -68,7 +70,7 @@ public final class EasyRowAction<T>
 
   private RowActionsManager<T> manager;
 
-  private final ValueProvider<T, String> labelProvider;
+  private ValueProvider<T, String> labelProvider;
   private final ValueProvider<T, ? extends AbstractIcon<?>> iconProvider;
   private final SerializableConsumer<T> actionHandler;
 
@@ -126,6 +128,7 @@ public final class EasyRowAction<T>
   private SerializablePredicate<T> visibleWhen;
   private SerializablePredicate<T> enabledWhen;
   private ValueProvider<T, String> tooltipProvider;
+  private boolean iconOnly;
   private SerializableFunction<T, ConfirmDialog> confirmDialogFactory;
   private transient boolean confirmPending;
 
@@ -157,6 +160,52 @@ public final class EasyRowAction<T>
    */
   public EasyRowAction<T> enabledWhen(SerializablePredicate<T> predicate) {
     this.enabledWhen = predicate;
+    refresh();
+    return this;
+  }
+
+  /**
+   * Sets a static label for this action, replacing the one given when the action was added.
+   *
+   * @param label the label text, or {@code null} to remove the label
+   * @return this action, for method chaining
+   * @throws IllegalArgumentException if {@code label} is {@code null} and the action has no icon
+   */
+  public EasyRowAction<T> label(String label) {
+    return label(Constant.ofNullable(label));
+  }
+
+  /**
+   * Sets a dynamic label for this action, computed from the row item, replacing the one given when
+   * the action was added.
+   *
+   * @param labelProvider a function that returns the label text for a given row item, or
+   *        {@code null} to remove the label
+   * @return this action, for method chaining
+   * @throws IllegalArgumentException if {@code labelProvider} is {@code null} and the action has no
+   *         icon
+   */
+  public EasyRowAction<T> label(ValueProvider<T, String> labelProvider) {
+    if (labelProvider == null && iconProvider == null) {
+      throw new IllegalArgumentException("At least one of label or icon must be non-null");
+    }
+    this.labelProvider = labelProvider;
+    refresh();
+    return this;
+  }
+
+  /**
+   * Sets whether the inline button of this action shows only its icon. When {@code true} and the
+   * action has an icon, the label is not rendered as button content; it is set as the button's
+   * {@code aria-label} instead, and it is still used as the item text in the
+   * {@link RowActionsStyle#DROPDOWN DROPDOWN} and {@link RowActionsStyle#CONTEXT_MENU CONTEXT_MENU}
+   * styles. It has no effect on actions without an icon. Defaults to {@code false}.
+   *
+   * @param iconOnly {@code true} to render the inline button with its icon only
+   * @return this action, for method chaining
+   */
+  public EasyRowAction<T> iconOnly(boolean iconOnly) {
+    this.iconOnly = iconOnly;
     refresh();
     return this;
   }
@@ -365,11 +414,23 @@ public final class EasyRowAction<T>
 
         // Forward all attributes/properties set on this action's element (e.g. CSS classes) except the two handled below.
         // Only exclude "title" if there's a tooltip provider; otherwise preserve manually-set title attributes.
-        String[] excluded = tooltipProvider != null ? new String[]{"theme", "title"} : new String[]{"theme"};
-        renderer.copyAllAttributesAndPropertiesExcept(this, excluded);
+        // Likewise, only exclude "aria-label" when it is bound from the label of an icon-only button.
+        boolean labelAsAriaLabel = isRenderedIconOnly() && labelProvider != null;
+        List<String> excluded = new ArrayList<>(List.of("theme"));
+        if (tooltipProvider != null) {
+          excluded.add("title");
+        }
+        if (labelAsAriaLabel) {
+          excluded.add("aria-label");
+        }
+        renderer.copyAllAttributesAndPropertiesExcept(this, excluded.toArray(String[]::new));
         // Bind the title attribute per-item so tooltip text can vary by row (only if a provider is set)
         if (tooltipProvider != null) {
           renderer.bind("title", tooltipProvider);
+        }
+        // Expose the label as the accessible name when it is not rendered as button content
+        if (labelAsAriaLabel) {
+          renderer.bind("aria-label", labelProvider);
         }
         // Set the theme attribute statically; getTheme() appends "icon" when the button is icon-only
         renderer.set("theme", getTheme());
@@ -398,21 +459,31 @@ public final class EasyRowAction<T>
           });
         }
 
-        // Render the label text as button content; no-op when labelProvider is null (icon-only button)
-        renderer.addContent(labelProvider);
+        // Render the label text as button content, unless the button is icon-only
+        if (!isRenderedIconOnly()) {
+          renderer.addContent(labelProvider);
+        }
       });
     });
   }
 
   /**
+   * Returns whether the inline button shows only its icon: an icon is configured and either there
+   * is no label or {@link #iconOnly(boolean)} is enabled.
+   */
+  private boolean isRenderedIconOnly() {
+    return iconProvider != null && (labelProvider == null || iconOnly);
+  }
+
+  /**
    * Returns the {@code theme} attribute value for this action's {@code <vaadin-button>}, combining
    * any user-set theme variants (e.g. {@code "primary"}) with {@code "icon"} when the button is
-   * icon-only (an icon is configured and no label provider was set). Returns {@code null} when no
-   * theme variant applies.
+   * icon-only (see {@link #isRenderedIconOnly()}). Returns {@code null} when no theme variant
+   * applies.
    */
   String getTheme() {
     String theme = getElement().getAttribute("theme");
-    if (iconProvider != null && labelProvider == null) {
+    if (isRenderedIconOnly()) {
       theme = theme == null || theme.isEmpty() ? "icon" : theme + " icon";
     }
     return theme == null || theme.isEmpty() ? null : theme;

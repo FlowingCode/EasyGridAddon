@@ -150,6 +150,142 @@ public class EasyRowActionTest {
     assertNull(action.getTheme());
   }
 
+  // --- label ---
+
+  @Test
+  public void labelStatic_replacesInitialLabel() {
+    var action = new EasyRowAction<>(null, Constant.of("X"), null, NOP);
+    assertSame(action, action.label("Save"));
+    assertEquals("Save", action.getLabel(null));
+    assertEquals(
+        "<vaadin-button @click=${actionsHandler0}>${`Save`}</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void labelDynamic_rendersPerRowContent() {
+    var action = new EasyRowAction<Integer>(null, Constant.of("X"), null, item -> {});
+    action.label(item -> "Save " + item);
+    assertEquals("Save 7", action.getLabel(7));
+    assertEquals(
+        "<vaadin-button @click=${actionsHandler0}>${item.actions[0]}</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void label_addedToIconOnlyAction_rendersIconAndContent() {
+    var action = new EasyRowAction<>(null, null, Constant.of(new Icon("vaadin", "check")), NOP);
+    action.label("Save");
+    assertNull(action.getTheme());
+    assertEquals(
+        "<vaadin-button @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "${`Save`}"
+            + "</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void labelNull_onActionWithIcon_removesLabel() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"),
+        Constant.of(new Icon("vaadin", "check")), NOP);
+    action.label((String) null);
+    assertNull(action.getLabel(null));
+    assertEquals("icon", action.getTheme());
+  }
+
+  @Test(expected = IllegalArgumentException.class)
+  public void labelNull_onActionWithoutIcon_throws() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"), null, NOP);
+    action.label((String) null);
+  }
+
+  // --- iconOnly ---
+
+  @Test
+  public void iconOnly_withLabelAndIcon_rendersIconAndAriaLabel() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"),
+        Constant.of(new Icon("vaadin", "check")), NOP);
+    assertSame(action, action.iconOnly(true));
+    assertEquals(
+        "<vaadin-button aria-label=\"Save\" theme=\"icon\" @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "</vaadin-button>",
+        templateFor(action));
+    // the label is still available to the dropdown and context menu styles
+    assertEquals("Save", action.getLabel(null));
+  }
+
+  @Test
+  public void iconOnly_withDynamicLabel_bindsAriaLabelPerRow() {
+    var action = new EasyRowAction<Integer>(null, null,
+        Constant.of(new Icon("vaadin", "check")), item -> {});
+    action.iconOnly(true).label(item -> "Save " + item);
+    assertEquals(
+        "<vaadin-button aria-label=${item.actions[0]} theme=\"icon\" @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void iconOnly_labelOverridesManualAriaLabel() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"),
+        Constant.of(new Icon("vaadin", "check")), NOP);
+    action.getElement().setAttribute("aria-label", "Manual");
+    action.iconOnly(true);
+    assertEquals(
+        "<vaadin-button aria-label=\"Save\" theme=\"icon\" @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void iconOnly_withoutLabel_preservesManualAriaLabel() {
+    var action = new EasyRowAction<>(null, null, Constant.of(new Icon("vaadin", "check")), NOP);
+    action.getElement().setAttribute("aria-label", "Manual");
+    action.iconOnly(true);
+    assertEquals(
+        "<vaadin-button aria-label=\"Manual\" theme=\"icon\" @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void iconOnly_withoutIcon_stillRendersLabel() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"), null, NOP);
+    action.iconOnly(true);
+    assertNull(action.getTheme());
+    assertEquals(
+        "<vaadin-button @click=${actionsHandler0}>${`Save`}</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void iconOnly_false_restoresLabelContent() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"),
+        Constant.of(new Icon("vaadin", "check")), NOP);
+    action.iconOnly(true).iconOnly(false);
+    assertNull(action.getTheme());
+    assertEquals(
+        "<vaadin-button @click=${actionsHandler0}>"
+            + "<vaadin-icon icon=\"vaadin:check\"></vaadin-icon>"
+            + "${`Save`}"
+            + "</vaadin-button>",
+        templateFor(action));
+  }
+
+  @Test
+  public void getTheme_iconOnlyWithLabel_combinesWithUserVariant() {
+    var action = new EasyRowAction<>(null, Constant.of("Save"),
+        Constant.of(new Icon("vaadin", "check")), NOP);
+    action.addThemeVariants(ButtonVariant.LUMO_ERROR);
+    action.iconOnly(true);
+    assertEquals("error icon", action.getTheme());
+  }
+
   // --- baseline ---
 
   @Test
